@@ -21,7 +21,7 @@ pip install vizdoom
 pip install varname
 
 
-julia
+# julia
 
-using Pkg
-Pkg.add("CxxWrap")
+# using Pkg
+# Pkg.add("CxxWrap")
