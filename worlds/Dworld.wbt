@@ -1,0 +1,601 @@
+#VRML_SIM R2020b utf8
+WorldInfo {
+  coordinateSystem "NUE"
+}
+Viewpoint {
+  fieldOfView 1.3
+  orientation 0.010043673917034802 0.8423932874717313 0.5387695925317402 3.1616948297772707
+  position -0.011961103750660083 1.4647237534142843 -0.9396959046165965
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+DEF MyFloor Floor {
+  size 2 2
+}
+DEF letter_box Solid {
+  translation -0.565576 3.33067e-15 -0.794708
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(20)"
+}
+SolidBox {
+  translation -0.618803 0.05 0.463736
+  name "box(37)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.625617 0.05 0.578247
+  name "box(38)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.642827 0.05 -0.404475
+  name "box(39)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.614491 0.05 0.216461
+  name "box(40)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.602943 0.05 0.010313
+  name "box(41)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.00300413 0.05 -0.705049
+  rotation -0.5000001748437317 6.633972319816142e-07 -0.8660253028380855 3.14159
+  name "box(26)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.324908 0.05 0.517289
+  rotation 0.7071067811865163 -2.973929079720631e-07 0.7071067811865163 -3.1415853071795863
+  name "box(28)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.116254 0.05 -0.725146
+  rotation -0.5000001748437317 6.633972319816142e-07 -0.8660253028380855 3.14159
+  name "box(29)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.616903 0.05 0.127591
+  rotation -0.5000001748437317 6.633972319816142e-07 -0.8660253028380855 3.14159
+  name "box(27)"
+  size 0.1 0.1 0.1
+  appearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "textures/desktop_wood.jpg"
+      ]
+    }
+    roughness 0.5
+    metalness 0
+  }
+}
+SolidBox {
+  translation -0.607375 0.05 0.346382
+  rotation -0.5000001748437317 6.633972319816142e-07 -0.8660253028380855 3.14159
+  name "box(30)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.625828 0.05 0.118225
+  rotation -0.13052598533525914 1.120639874094853e-06 -0.9914448886100546 3.14159
+  name "box(31)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.623492 0.05 -0.239298
+  rotation -0.5000001748437317 6.633972319816142e-07 -0.8660253028380855 3.14159
+  name "box(32)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.586752 0.05 0.240398
+  rotation -0.5000001748437317 6.633972319816142e-07 -0.8660253028380855 3.14159
+  name "box(33)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.202897 0.05 0.554026
+  rotation -0.5000001748437317 6.633972319816142e-07 -0.8660253028380855 3.14159
+  name "box(34)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.631141 0.05 -0.13868
+  rotation -0.5000001748437317 6.633972319816142e-07 -0.8660253028380855 3.14159
+  name "box(35)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.622588 0.05 -0.271265
+  rotation -0.5000001748437317 6.633972319816142e-07 -0.8660253028380855 3.14159
+  name "box(36)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.575948 0.05 0.486566
+  name "box(17)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.467608 0.05 0.580531
+  name "box(18)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.11035 0.05 0.0177173
+  name "box(19)"
+  size 0.1 0.1 0.1
+  appearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "textures/fabric_with_motif.jpg"
+      ]
+    }
+    roughness 0.5
+    metalness 0
+  }
+}
+SolidBox {
+  translation 0.589959 0.05 0.585199
+  name "box(20)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.0695238 0.05 0.5921
+  name "box(21)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.349746 0.05 0.568924
+  name "box(22)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.602641 0.05 -0.11369
+  name "box(23)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.59282 0.05 0.36748
+  name "box(8)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.639982 0.05 -0.644952
+  name "box(9)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.627204 0.05 0.00824829
+  name "box(3)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.442466 0.05 0.521656
+  name "box(4)"
+  size 0.1 0.1 0.1
+  appearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "textures/interlaced_parquetry.jpg"
+      ]
+    }
+    roughness 0.5
+    metalness 0
+  }
+}
+SolidBox {
+  translation 0.0677715 0.05 0.567313
+  rotation -0.5000001748437317 6.633972319816142e-07 -0.8660253028380855 3.14159
+  name "box(5)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.254087 0.05 -0.703318
+  rotation -0.5000001748437317 6.633972319816142e-07 -0.8660253028380855 3.14159
+  name "box(24)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.274087 0.05 -0.690153
+  rotation -0.5000001748437317 6.633972319816142e-07 -0.8660253028380855 3.14159
+  name "box(25)"
+  size 0.1 0.1 0.1
+  appearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "textures/gray_brick_wall.jpg"
+      ]
+    }
+    roughness 0.5
+    metalness 0
+  }
+}
+SolidBox {
+  translation 0.596802 0.05 -0.372769
+  name "box(6)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.417327 0.05 -0.701469
+  name "box(7)"
+  size 0.1 0.1 0.1
+  appearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "textures/dry_grass.jpg"
+      ]
+    }
+    roughness 0.5
+    metalness 0
+  }
+}
+SolidBox {
+  translation 0.489265 0.05 -0.720756
+  name "box(10)"
+  size 0.1 0.1 0.1
+  appearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "textures/grass.jpg"
+      ]
+    }
+    roughness 0.5
+    metalness 0
+  }
+}
+SolidBox {
+  translation -0.887799 0.05 -0.891526
+  name "box(11)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.58383 0.05 -0.508023
+  rotation 0 1 0 0.261799
+  name "box(12)"
+  size 0.1 0.1 0.1
+  appearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "textures/rock.jpg"
+      ]
+    }
+    roughness 0.5
+    metalness 0
+  }
+}
+SolidBox {
+  translation -0.910765 0.05 -0.13708
+  name "box(13)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.381394 0.05 -0.707274
+  name "box(14)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation 0.575439 0.05 -0.627842
+  name "box(15)"
+  size 0.1 0.1 0.1
+}
+SolidBox {
+  translation -0.519345 0.05 -0.69095
+  name "box(16)"
+  size 0.1 0.1 0.1
+  appearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "textures/lightwood.jpg"
+      ]
+    }
+    roughness 0.5
+    metalness 0
+  }
+}
+SolidBox {
+  translation -0.78499 0.05 -0.542529
+  name "box(2)"
+  size 0.1 0.1 0.1
+  appearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "textures/interlaced_parquetry.jpg"
+      ]
+    }
+    roughness 0.5
+    metalness 0
+  }
+}
+SolidBox {
+  translation 0.611365 0.05 -0.733326
+  name "box(1)"
+  size 0.1 0.1 0.1
+  appearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "textures/asphalt.jpg"
+      ]
+    }
+    roughness 0.5
+    metalness 0
+  }
+}
+SolidBox {
+  translation 0.125138 0.05 -0.703332
+  size 0.1 0.1 0.1
+  appearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "textures/chessboard.jpg"
+      ]
+    }
+    roughness 0.5
+    metalness 0
+  }
+}
+DEF MyWall1 Solid {
+  translation 0 0.05 1
+  children [
+    DEF wall1 Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 2 0.1 0.01
+      }
+    }
+  ]
+  name "solid(2)"
+  boundingObject USE wall1
+}
+DEF MyWall2 Solid {
+  translation 0 0.05 -1
+  children [
+    DEF wall2 Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 2 0.1 0.01
+      }
+    }
+  ]
+  name "solid(3)"
+  boundingObject USE wall2
+}
+DEF MyWall3 Solid {
+  translation 1 0.05 0
+  rotation 0 1 0 1.5707996938995747
+  children [
+    DEF wall3 Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 2 0.1 0.01
+      }
+    }
+  ]
+  name "solid(4)"
+  boundingObject USE wall3
+}
+DEF MyWall4 Solid {
+  translation -1 0.05 0
+  rotation 0 1 0 1.5707996938995747
+  children [
+    DEF wall22 Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 2 0.1 0.01
+      }
+    }
+  ]
+  name "solid(5)"
+  boundingObject USE wall22
+}
+DEF letter_box Solid {
+  translation 0.354257 3.33067e-15 -0.838301
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(1)"
+}
+DEF letter_box Solid {
+  translation 0.878747 3.33067e-15 -0.923174
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(6)"
+}
+DEF letter_box Solid {
+  translation 0.87935 3.33067e-15 -0.345449
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(7)"
+}
+DEF letter_box Solid {
+  translation 0.6008 3.9968e-15 0.712204
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(10)"
+}
+DEF letter_box Solid {
+  translation -0.0740333 3.77476e-15 0.707197
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(14)"
+}
+DEF letter_box Solid {
+  translation -0.908079 2.88658e-15 0.899124
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(15)"
+}
+DEF letter_box Solid {
+  translation -0.722202 3.33067e-15 0.502841
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(16)"
+}
+DEF letter_box Solid {
+  translation -0.789943 4.21885e-15 0.195154
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(17)"
+}
+DEF letter_box Solid {
+  translation -0.416995 3.77476e-15 0.928224
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(18)"
+}
+DEF letter_box Solid {
+  translation 0.270842 2.66454e-15 0.921813
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(19)"
+}
+DEF letter_box Solid {
+  translation 0.887998 3.9968e-15 0.860353
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(11)"
+}
+DEF letter_box Solid {
+  translation 0.793262 2.22045e-15 0.245146
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(12)"
+}
+DEF letter_box Solid {
+  translation 0.721582 3.33067e-15 -0.0238581
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(13)"
+}
+DEF letter_box Solid {
+  translation 0.724771 3.33067e-15 -0.598562
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(8)"
+}
+DEF letter_box Solid {
+  translation -0.0767346 3.33067e-15 -0.933214
+  children [
+    SolidBox {
+      translation 0 0.05 0
+      size 0.1 0.1 0.1
+    }
+  ]
+  name "solid(9)"
+}
+RubberDuck {
+  translation -0.207799 -1.18238e-14 0.554874
+  rotation 1.27237e-14 -1 -9.58979e-09 -3.1415853071795863
+  scale 2
+}
+RubberDuck {
+  translation -0.682842 0 -0.51083
+  name "rubber duck(2)"
+  scale 1.5
+}
+RubberDuck {
+  translation -0.202103 0 -0.6385
+  name "rubber duck(3)"
+}
+RubberDuck {
+  translation -0.552272 -5.10703e-15 0.582049
+  name "rubber duck(4)"
+}
+RubberDuck {
+  translation 0.41311 -4.4409e-16 0.0645548
+  name "rubber duck(5)"
+}
+RubberDuck {
+  translation 0.729913 0 -0.723984
+  name "rubber duck(6)"
+}
+DEF Mitsos E-puck {
+  translation 0.717845 0 -0.835527
+  rotation 0 1 0 1.570796
+  controller "alpha"
+  supervisor TRUE
+  emitter_channel 13
+  receiver_channel 12
+  groundSensorsSlot [
+    DEF Bumper TouchSensor {
+      translation -0.03 0 0.03
+      rotation 0 0 1 1.57075
+      boundingObject Cylinder {
+        height 0.05
+        radius 0.04
+      }
+    }
+  ]
+}
