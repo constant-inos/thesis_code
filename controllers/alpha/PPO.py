@@ -5,11 +5,8 @@ from tensorflow.keras.optimizers import Adam
 import random
 import tensorflow_probability as tfp
 
-# from networks import PPONetwork
-# from experience_memory import Memory
-# from agents.networks import *
-# from agents.experience_memory import *
-
+from networks import *
+from experience_memory import *
 
 def normalize(x):
     mean = np.mean(x)
@@ -19,7 +16,7 @@ def normalize(x):
         std = np.std(x)
     return (x - mean) / std
 
-class Memory1:
+class Memory:
     def __init__(self,state_shape,n_actions):
         self.memory = []
         self.memCounter = 0
@@ -81,7 +78,7 @@ class Memory1:
         self.__init__(self.state_shape,self.n_actions)
 
 class Agent(object):
-    def __init__(self,lr=0.005,gamma=0.99,n_actions=2):
+    def __init__(self,state_shape,n_actions,lr=0.005,gamma=0.99):
         self.lr = lr
         self.gamma = gamma
         self.n_actions = n_actions
@@ -90,10 +87,10 @@ class Agent(object):
         self.MINIBATCH_SIZE = 64
         self.PPO_EPSILON = 0.2
 
-        self.ppo_network = PPONetwork(n_actions)
+        self.ppo_network = PPONetworkConv(n_actions)
         self.ppo_network.compile(optimizer=Adam(lr=lr))
 
-        self.memory = Memory(state_shape=(4,),n_actions=2)
+        self.memory = Memory(state_shape=state_shape,n_actions=n_actions)
 
     def choose_action(self,state):
         state = tf.convert_to_tensor([state])

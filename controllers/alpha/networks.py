@@ -2,6 +2,34 @@ import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras.layers import Dense,Conv2D,Flatten
 
+class PPONetworkConv(keras.Model):
+    def __init__(self,n_actions):
+        super(PPONetworkConv,self).__init__()
+
+        self.HiddenLayers = []
+
+        self.HiddenLayers.append( Conv2D(32,kernel_size=8,strides=(4,4),activation='relu') )
+        self.HiddenLayers.append( Conv2D(64,kernel_size=4,strides=(2,2),activation='relu') )
+        self.HiddenLayers.append( Conv2D(64,kernel_size=3,activation='relu') )
+        self.HiddenLayers.append( Flatten() )
+
+        self.HiddenLayers.append( Dense(256,activation='relu') )
+        self.HiddenLayers.append( Dense(256,activation='relu') )
+        
+        self.v = Dense(1,activation='linear')
+        self.pi = Dense(n_actions,activation='softmax')
+
+    def call(self,state):
+        x = state
+
+        for layer in self.HiddenLayers:
+            x = layer(x)
+
+        policy = self.pi(x)
+        value = self.v(x)
+
+        return policy, value
+
 
 class PPONetwork(keras.Model):
     def __init__(self,n_actions):

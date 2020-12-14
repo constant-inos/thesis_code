@@ -46,7 +46,8 @@ class VizDoomEnv(object):
         frame = game_state.screen_buffer # initial resolution 480 x 640
         frame = preprocessImg(frame, size=(self.state_size[0], self.state_size[1])) # 64x64
         state = np.stack(([frame]*4),axis=2) # 64x64x4 (stack the same frame)
-        self.state = np.expand_dims(state,axis=0) #1x64x64x4
+        #self.state = np.expand_dims(state,axis=0) #1x64x64x4
+        self.state = state
         self.prev_misc = game_state.game_variables
         print('new episode')
         return self.state
@@ -76,13 +77,13 @@ class VizDoomEnv(object):
 
         (img_rows, img_cols) = (self.state_size[0], self.state_size[1])
         new_frame = preprocessImg(new_frame, size=(img_rows, img_cols))
-        new_frame = np.reshape(new_frame, (1, img_rows, img_cols, 1))
-        self.state = np.append(new_frame, self.state[:, :, :, :3], axis=3)
+        new_frame = np.reshape(new_frame, (img_rows, img_cols, 1))
+        self.state = np.append(new_frame, self.state[ :, :, :3], axis=2)
 
         reward = self.shape_reward(reward,misc,self.prev_misc)
         self.prev_misc = misc
         self.steps += 1
-        return self.state,reward,done
+        return self.state,reward,done,'info'
 
     def shape_reward(self, r_t, misc, prev_misc):
 
