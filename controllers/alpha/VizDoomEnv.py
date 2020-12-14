@@ -6,6 +6,7 @@ from skimage import transform,color,exposure
 from skimage.viewer import ImageViewer
 
 import numpy as np
+from collections import deque
 
 
 def preprocessImg(img, size):
