@@ -1,6 +1,6 @@
 import tensorflow as tf
 import tensorflow.keras as keras
-from tensorflow.keras.layers import Dense,Conv2D,Flatten
+from tensorflow.keras.layers import Dense,Conv2D,Flatten,Concatenate
 
 class PPONetworkConv(keras.Model):
     def __init__(self,n_actions):
@@ -111,3 +111,41 @@ class DQNetwork(keras.Model):
 
         return value
 
+class MitsosPPONet(keras.Model):
+    def __init__(self,n_actions):
+        super(MitsosPPONet, self).__init__()
+        self.ConvLayers = []
+        self.ConvLayers.append( Conv2D(64,kernel_size=9,activation='relu') )
+        self.ConvLayers.append( Conv2D(64,kernel_size=5,activation='relu') )
+        self.ConvLayers.append( Conv2D(64,kernel_size=3,activation='relu') )
+        
+        self.flatten = Flatten() 
+        self.concat = Concatenate(axis=-1)
+        
+        self.DenseLayers = []
+        self.DenseLayers.append( Dense(512,activation='relu') )
+        self.DenseLayers.append( Dense(256,activation='relu') )
+
+        self.policy = Dense(n_actions,activation='softmax')
+        self.value = Dense(1,activation='linear')
+    
+    def call(self,state):
+        x1 = state[0] #stacked frames
+        x2 = state[1] #stacked sensor values
+        
+        for layer in self.ConvLayers:
+            x1 = layer(x1)
+            
+        x1 = self.flatten(x1)
+        x2 = self.flatten(x2)
+        x = self.concat([x1,x2])
+        
+        for layer in self.DenseLayers:
+            x = layer(x)
+        
+        pi = self.policy(x)
+        v = self.value(x)
+        
+        return pi,v
+        
+    

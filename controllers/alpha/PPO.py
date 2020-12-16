@@ -16,7 +16,7 @@ def normalize(x):
         std = np.std(x)
     return (x - mean) / std
 
-class Memory:
+class MemoryNo:
     def __init__(self,state_shape,n_actions):
         self.memory = []
         self.memCounter = 0
@@ -85,7 +85,8 @@ class Agent(object):
         self.LAMBDA_GAE = 0.95
         self.PPO_EPOCHS = 10
         self.MINIBATCH_SIZE = 64
-        self.PPO_EPSILON = 0.2
+        self.PPO_EPSILON = 0.15
+        print(lr,self.PPO_EPSILON)
 
         self.ppo_network = PPONetworkConv(n_actions)
         self.ppo_network.compile(optimizer=Adam(lr=lr))
@@ -97,7 +98,20 @@ class Agent(object):
         probs, value = self.ppo_network(state)
         action_dist = tfp.distributions.Categorical(probs=probs, dtype=tf.float32)
         action = action_dist.sample()
-        log_prob = action_dist.log_prob(action)
+        try:
+            log_prob = action_dist.log_prob(action)
+        except:
+            print(state)
+            print(action,probs,value)
+            print(action_dist)
+            
+            x = self.ppo_network.fc1(state)
+            print(x)
+            x = self.ppo_network.fc2(x)
+            print(x)
+            
+            exit()
+
         return int(action.numpy()[0]), log_prob.numpy()[0], value.numpy()[0][0]
 
     def read_memory(self):
@@ -106,7 +120,7 @@ class Agent(object):
         return memory
 
     def store_experience(self,state,action,reward,state_,done,log_prob,value):
-        self.memory.store_experience(state,action,reward,state_,done,log_prob,value)
+        self.memory.store_experience(np.expand_dims(state,axis=0),action,reward,np.expand_dims(state_,axis=0),done,log_prob,value)
         return
 
     def compute_gae(self,next_value, values, rewards, dones):
@@ -160,7 +174,7 @@ if __name__ == '__main__':
 
         
     env = gym.make('CartPole-v0')
-    agent = Agent()
+    agent = Agent(state_shape=(4,),n_actions=2)
 
     def test_agent(env):
         total_reward = 0
@@ -193,7 +207,7 @@ if __name__ == '__main__':
         obs = tf.convert_to_tensor([observation_])
         _,next_value = agent.ppo_network(obs)
         next_value = next_value.numpy()[0][0]
-        states,actions,rewards,states_,dones,log_probs,values = agent.read_memory()#?
+        states,actions,rewards,states_,dones,log_probs,values = agent.read_memory()
         returns = agent.compute_gae(next_value,values,rewards,dones)
         advantages = returns - values
         agent.ppo_update(states,actions,log_probs,returns,advantages)

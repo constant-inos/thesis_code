@@ -19,9 +19,9 @@ def preprocessImg(img, size):
 
 
 class VizDoomEnv(object):
-    def __init__(self,state_size=(64,64,4)):
+    def __init__(self,state_size=(64,64,4),scenario_path='defend_the_center.cfg'):
         game = DoomGame()
-        path_to_scenario = 'defend_the_center.cfg'
+        path_to_scenario = scenario_path
         game.load_config(path_to_scenario)
         game.set_sound_enabled(True)
         game.set_screen_resolution(ScreenResolution.RES_640X480)

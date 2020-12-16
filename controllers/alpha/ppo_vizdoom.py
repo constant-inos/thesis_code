@@ -4,7 +4,8 @@ import tensorflow as tf
 from PPO import Agent
 from VizDoomEnv import VizDoomEnv
 
-env = VizDoomEnv()
+scenario_path='/content/gdrive/MyDrive/Colab Notebooks/thesis_code/controllers/alpha/defend_the_center.cfg'
+env = VizDoomEnv(scenario_path=scenario_path)
 agent = Agent(state_shape=env.state_size,n_actions=env.action_size)
 
 def test_agent(env):
