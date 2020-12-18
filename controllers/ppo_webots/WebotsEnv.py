@@ -77,7 +77,7 @@ class Mitsos():
         self.set_target()
 
         self.discrete_actions = [[-1,1],[1,1],[1,-1]]
-        self.n_actions = len(self.discrete_actions)
+        self.action_size = len(self.discrete_actions)
         self.stepCounter = 0
 
 
@@ -165,11 +165,12 @@ class Mitsos():
         if (reset_position):
             self.set_position(xs,ys,0.005)  
             self.set_rotation(3.14)
-        state,_,_,_ = self.step([0,0])
+        state,_,_,_ = self.step(1)
         return state
 
 
-    def step(self,action):
+    def step(self,action_idx):
+        action = self.discrete_actions[action_idx]
         stacked_frames = 4
         xt,yt = self.x_target,self.y_target
         x0,y0,z = self.get_robot_position()
