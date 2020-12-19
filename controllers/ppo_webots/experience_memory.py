@@ -32,6 +32,22 @@ class Memory:
         lists = [np.vstack(l) if isinstance(l[0],np.ndarray) else np.vstack(l).reshape(-1) for l in lists ]
 
         return tuple(lists)
+        
+    def sample_memory(self,n_samples):
+        samples = random.sample(self.memory,n_samples)
+        batch_size = self.memCounter
+        
+        num_lists = len(self.memory[0])
+        lists = [[] for _ in range(num_lists)]
+        
+        for sample in samples:
+            for i in range(len(sample)):
+                lists[i].append(sample[i])
+
+        
+        lists = [np.vstack(l) if isinstance(l[0],np.ndarray) else np.vstack(l).reshape(-1) for l in lists ]
+
+        return tuple(lists)
 
     def clear(self):
         self.__init__(self.n_actions)

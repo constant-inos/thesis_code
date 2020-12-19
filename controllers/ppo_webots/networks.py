@@ -93,10 +93,10 @@ class DQNetwork(keras.Model):
         super(DQNetwork, self).__init__()
         self.HiddenLayers = []
 
-        # self.HiddenLayers.append( Conv2D(32,kernel_size=8,strides=(4,4),activation='relu') )
-        # self.HiddenLayers.append( Conv2D(64,kernel_size=4,strides=(2,2),activation='relu') )
-        # self.HiddenLayers.append( Conv2D(64,kernel_size=3,activation='relu') )
-        # self.HiddenLayers.append( Flatten() )
+        self.HiddenLayers.append( Conv2D(32,kernel_size=8,strides=(4,4),activation='relu') )
+        self.HiddenLayers.append( Conv2D(64,kernel_size=4,strides=(2,2),activation='relu') )
+        self.HiddenLayers.append( Conv2D(64,kernel_size=3,activation='relu') )
+        self.HiddenLayers.append( Flatten() )
         self.HiddenLayers.append( Dense(units=512, activation='relu') )
 
         self.value = Dense(units=action_size, activation='linear')
