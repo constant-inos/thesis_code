@@ -77,6 +77,8 @@ class Agent(object):
 
 if __name__ == '__main__':
     import gym
+    from statistics import *
+    L = Logger(fname='Cartpole_ddqn_0.pkl')
 
     env = gym.make('CartPole-v0')
     agent = Agent(action_size=2)
@@ -98,5 +100,9 @@ if __name__ == '__main__':
 
             agent.learn()
 
+            L.tick()
+
+        L.add_log('score',score)
+        L.save_game()        
         scores.append(score)
         print('GAME:',i,'SCORE:',score,'AVG SCORE:',np.mean(scores[-100:]))

@@ -1,4 +1,5 @@
 import numpy as np 
+import os
 from os import listdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt 
@@ -7,77 +8,72 @@ from varname import nameof
 import csv
 import pandas as pd
 from datetime import datetime
+import pickle
 
 
 class VarLog:
     def __init__(self,name):
         self.name = name
-        self.log = []
-        self.time = []
-        
+        self.log = [] 
+        self.time = []    
 
 class Logger:
-    def __init__(self):
-        self.id = time.time()
+    def __init__(self,fname):
         self.Variables = {}
-        self.time = -1
-        self.vnames = []
+        self.fname = fname
+        self.time = []
+        self.t = -1
 
     def tick(self,t=1):
-        self.time += t
+        self.t += t
+        self.time.append(self.t)
 
     def add_variable(self,vname):
         self.Variables[vname] = VarLog(vname)
 
     def add_log(self,vname,value):
-        if self.time == -1: return
         if not vname in self.Variables: self.add_variable(vname)
-
         self.Variables[vname].log.append(value)
         self.Variables[vname].time.append(self.time)
 
     def add_logs(self,vars):
-        for i in range(len(vars)):
-            add_log(vnames[i],vars[i])
+        if not len(a) == len(vars): print('Error! Wrong number of variables!')
 
-    def plot(self,var):
-        var = self.Variables['var']
-        plt.plot(var.time,var.log)
-        plt.show()        
-        return
+        for i,vname in enumerate(self.Variables):
+            add_log(vname,vars[i])
 
 
     def save_game(self):
-        vnames = [vname for vname in self.Variables]
-        time = self.Variables['episode'].time
-        game = pd.DataFrame(columns=vnames,index=time)
-        game['time'] = pd.DataFrame(time,columns=['time'])
-        for vname in vnames:
-            try:
-                log = self.Variables[vname].log
-                game[vname] = log
-            except:
-                print(vname)
-        
-        now = str(datetime.now())
-        path = './stats/'+now+'.csv'
-        game.to_csv(path,mode='a')
+        if os.path.exists(self.fname):
+            os.remove(self.fname)
+        f = open(self.fname,"wb")
+        pickle.dump(self.Variables,f)
+        f.close()
+
+    def load_game(self,fname):
+        if os.path.exists:
+            f1 = open(fname,"rb")
+            self.Variables = pickle.load(f1)
+            f1.close()
+        else:
+            print('No such file!')
+
 
     def plot_game(self,game,vars):
         for vname in vars:
-            plt.plot(game[vname])
+            plt.plot(game[vname].time,game[vname].log)
         plt.show()
 
-    def get_last_game(self,mypath='./stats'):
-        files = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-        files.sort()
-        path = join(mypath, files[-1])
-        game = pd.read_csv(path)
-        return game
-
+    def plot(self,var):
+        var = self.Variables[var]
+        plt.plot(var.log)
+        plt.show()        
+        return
 
 if __name__ == '__main__':
+    fname = 'Cartpole_ddqn_0.pkl'
+    L = Logger(fname=fname)
 
-    L = Logger()
-    g = L.get_last_game()
-    L.plot_game(g,['r_expand'])
+    L.load_game(L.fname)
+
+    L.plot('score')
