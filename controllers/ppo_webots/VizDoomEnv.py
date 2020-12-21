@@ -49,7 +49,7 @@ class VizDoomEnv(object):
         #self.state = np.expand_dims(state,axis=0) #1x64x64x4
         self.state = state
         self.prev_misc = game_state.game_variables
-        print('new episode')
+        #print('new episode')
         return self.state
 
 
@@ -66,7 +66,7 @@ class VizDoomEnv(object):
         if done: 
             self.kills.append(self.prev_misc[0])
             self.life.append(self.steps)
-            print('LIFE:',self.steps,'KILLS:',self.kills[-1],'AVG-KILLS:',np.mean(self.kills))
+            #print('LIFE:',self.steps,'KILLS:',self.kills[-1],'AVG-KILLS:',np.mean(self.kills))
             self.steps = 0
             self.game.new_episode()
         game_state = self.game.get_state()
@@ -83,7 +83,7 @@ class VizDoomEnv(object):
         reward = self.shape_reward(reward,misc,self.prev_misc)
         self.prev_misc = misc
         self.steps += 1
-        return self.state,reward,done,'info'
+        return self.state,reward,done,(self.kills[-1] if done else 0)
 
     def shape_reward(self, r_t, misc, prev_misc):
 

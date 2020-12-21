@@ -4,8 +4,6 @@ from os import listdir
 from os.path import isfile, join
 import matplotlib.pyplot as plt 
 import time
-from varname import nameof
-import csv
 import pandas as pd
 from datetime import datetime
 import pickle
@@ -18,9 +16,10 @@ class VarLog:
         self.time = []    
 
 class Logger:
-    def __init__(self,fname):
+    def __init__(self,dir,fname):
         self.Variables = {}
-        self.fname = fname
+        self.fname = self.set_name(dir,fname)
+        print(self.fname)
         self.time = []
         self.t = -1
 
@@ -42,6 +41,18 @@ class Logger:
         for i,vname in enumerate(self.Variables):
             add_log(vname,vars[i])
 
+    def set_name(self,directory,fname):
+        i = -1
+        for f in os.listdir(directory):
+            f_ = f.split('.')
+            if len(f_)==2 and f_[1] == 'pkl':
+                f = f_[0]
+                f_ = f.split('_')
+                if len(f_) == 3:
+                    f = f_[0] +'_'+ f_[1]
+                    if f == fname:
+                        i = int(f_[2])
+        return os.path.join(directory,fname+'_'+str(i+1)+'.pkl')
 
     def save_game(self):
         if os.path.exists(self.fname):
@@ -71,9 +82,9 @@ class Logger:
         return
 
 if __name__ == '__main__':
-    fname = 'Cartpole_ddqn_0.pkl'
-    L = Logger(fname=fname)
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    L = Logger(dir=dir_path,fname='vizdoom_ddqn')
 
-    L.load_game(L.fname)
+    L.load_game(dir_path+'vizdoom_ddqn_0.pkl')
 
     L.plot('score')

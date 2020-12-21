@@ -10,7 +10,7 @@ from experience_memory import *
 
 class Agent(object):
 
-    def __init__(self, action_size, lr=0.0001, batch_size=32, \
+    def __init__(self, action_size, lr=0.0001, conv=False, batch_size=32, \
                  gamma=0.99, epsilon_max=1.0, epsilon_min=0.0001,\
                  update_target_freq=3000, train_interval=100, \
                  mem_size=50000, fname='dqn.h5'):
@@ -29,9 +29,9 @@ class Agent(object):
 
         self.memory = Memory(n_actions=action_size)
 
-        self.model = DQNetwork(action_size)
+        self.model = DQNetwork(action_size,conv=conv)
         self.model.compile(loss='mse',optimizer=Adam(lr))
-        self.target_model = DQNetwork(action_size)
+        self.target_model = DQNetwork(action_size,conv=conv)
     
     def choose_action(self,state):
         if np.random.random() < self.epsilon:
@@ -78,10 +78,12 @@ class Agent(object):
 if __name__ == '__main__':
     import gym
     from statistics import *
-    L = Logger(fname='Cartpole_ddqn_0.pkl')
 
     env = gym.make('CartPole-v0')
     agent = Agent(action_size=2)
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    L = Logger(dir=dir_path,fname='cartpole_ddqn')
 
     n_games = 2000
     scores = []
