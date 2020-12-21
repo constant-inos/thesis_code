@@ -13,7 +13,7 @@ class Agent(object):
     def __init__(self, action_size, lr=0.0001, conv=False, batch_size=32, \
                  gamma=0.99, epsilon_max=1.0, epsilon_min=0.0001,\
                  update_target_freq=3000, train_interval=100, \
-                 mem_size=50000, fname='dqn.h5'):
+                 mem_size=50000, fname='mitsos_dqn.h5'):
         
         self.action_size = action_size
         self.action_space = [i for i in range(action_size)]
@@ -73,6 +73,14 @@ class Agent(object):
     def update_target_model(self):
         self.target_model.set_weights(self.model.get_weights())
         return
+
+    def save_model(self):
+        self.model.save(self.fname)
+
+    def load_model(self):
+        self.model = tensorflow.keras.load_model(self.fname)
+        self.target_model = tensorflow.keras.load_model(self.fname)  
+
 
 
 if __name__ == '__main__':

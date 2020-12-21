@@ -68,15 +68,17 @@ class Mitsos():
         self.cam_shape = (self.camera.getWidth(),self.camera.getHeight())
         self.sensors_shape = (14,)
 
-        self.x_start = -0.748
-        self.y_start = 0.0
+        self.x_start = -0.71
+        self.y_start = -0.83
         self.path = []
         self.map = DynamicMap(self.x_start,self.y_start,map_unit=0.02)
         self.first_step = True
         self.x_target,self.y_target = 0,0
         self.set_target()
+        self.misc = [0,0]
 
-        self.discrete_actions = [[-1,1],[1,1],[1,-1]]
+        #self.discrete_actions = [[0,-1],[1,0],[0,1]] # normal mode
+        self.discrete_actions = [[1,-1],[1,0],[1,1]] # WebotsRound
         self.action_size = len(self.discrete_actions)
         self.stepCounter = 0
 
@@ -115,7 +117,12 @@ class Mitsos():
         Field.setSFRotation(rotationField,[0,1,0,a])
         self.robot.step(self.timestep) # if not nan values in first iteration
 
-    def set_wheels_speed(self,u1,u2):
+    def set_wheels_speed(self,u,w):
+        # u: velocity
+        # w: angular velocity
+        u1 = u + w
+        u2 = u - w
+
         self.wheels[0].setVelocity(u1)
         self.wheels[1].setVelocity(u2)
 
@@ -160,6 +167,7 @@ class Mitsos():
         self.stepCounter = 0
         xs,ys = self.x_start,self.y_start
         self.path = []
+        self.map.path = []
         OF.reset()
         self.set_target()
         if (reset_position):
@@ -203,16 +211,17 @@ class Mitsos():
         if action==[0,0]:
             return state,0,0,''
 
-        r_expand = self.map.spatial_std_reward()
+        explore = self.map.spatial_std_reward()
         collision = self.collision()
-        r_optic_flow = OF.optical_flow(cam4[:,:,0],cam4[:,:,3],action)
-        r_reach_target = target_reward((x0,y0),(xn,yn),(xt,yt))
+        #r_optic_flow = OF.optical_flow(cam4[:,:,0],cam4[:,:,3],action)
+        #r_reach_target = target_reward((x0,y0),(xn,yn),(xt,yt))
 
-        c1 = 10
-        c2 = -50
+        c1 = 0.1
+        c2 = -1
         c3 = 10
         c4 = 0
-        external_reward = c1*r_expand + c2*collision + c3*r_optic_flow + c4*r_reach_target
+        external_reward = c1*explore + c2*collision + c1*int(explore > self.misc[0])
+        self.misc = [explore,collision]
         
         done = collision or (self.stepCounter >= self.max_steps) 
         self.stepCounter += 1

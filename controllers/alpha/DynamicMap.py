@@ -17,11 +17,11 @@ class DynamicMap(object):
         return [int(x/self.map_unit),int(y/self.map_unit)]
 
     def spatial_std_reward(self):
-        path = self.path[-50:]
+        path = self.path[-20:]
         x = [p[0] for p in path]
         y = [p[1] for p in path]
         l = len(path)
-        if l<50: return 0
+        if l<20: return 0
 
         # point center
         c_x = np.mean(x)

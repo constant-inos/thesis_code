@@ -12,7 +12,7 @@ from networks import *
 from experience_memory import *
 from DDQN import Agent
 
-env = VizDoomEnv(scenario_path='/content/gdrive/MyDrive/thesis_code/scenarios/defend_the_center.cfg')
+env = VizDoomEnv(scenario_path='defend_the_center.cfg')
 agent = Agent(action_size=env.action_size,conv=True)
 
 
