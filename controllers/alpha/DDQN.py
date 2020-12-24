@@ -75,11 +75,11 @@ class Agent(object):
         return
 
     def save_model(self):
-        self.model.save(self.fname)
+        self.model.save_weights(self.model_file)
 
     def load_model(self):
-        self.model = tensorflow.keras.load_model(self.fname)
-        self.target_model = tensorflow.keras.load_model(self.fname)  
+        self.model.load_weights(self.model_file)
+        self.target_model.load_weights(self.model_file)
 
 
 
