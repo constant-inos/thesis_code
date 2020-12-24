@@ -70,14 +70,20 @@ class DoubleInputAgent(Agent):
 
         self.memory = Memory(n_actions=action_size)
 
+        self.model = MitsosDQNet(action_size)
+        self.model.compile(loss='mse',optimizer=Adam(lr))
+        self.target_model = MitsosDQNet(action_size)
+
         if os.path.exists(self.model_file):
+            state = env.reset()
+            state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
+            self.model(state)
+            self.target_model(state)
             self.load_model()
-        else:
-            self.model = MitsosDQNet(action_size)
-            self.model.compile(loss='mse',optimizer=Adam(lr))
-            self.target_model = MitsosDQNet(action_size)
+
 
     def choose_action(self,state):
+
         if np.random.random() < self.epsilon:
             action_idx = np.random.choice(self.action_space)
         else:
@@ -95,7 +101,7 @@ env = Mitsos()
 keyboard = Keyboard() # to control training from keyboard input
 keyboard.enable(env.timestep)
 
-agent = DoubleInputAgent(action_size=3,lr=0.0001,mem_size=50000)
+agent = DoubleInputAgent(action_size=3,lr=0.0001,mem_size=40000)
 
 
 
@@ -128,8 +134,6 @@ if os.path.exists(filename):
     del my_shelf,epsilon,memCounter,memory,Lvars,fname
     print('VARIABLES LOADED')
     os.remove(filename)
-
-print(len(agent.memory.memory))
 
 while (i<n_games):
 
@@ -170,7 +174,7 @@ while (i<n_games):
     L.save_game()
     scores.append(score)
     print('EPISODE:',i,'STEPS:',ep_steps,'EPSILON',agent.epsilon,'SCORE:',score,'AVG SCORE:',np.mean(scores))
-    #agent.save_model()
+    agent.save_model()
 
     i += 1
 
