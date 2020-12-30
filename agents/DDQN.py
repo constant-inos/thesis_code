@@ -12,13 +12,14 @@ import numpy as np
 import os
 from networks.networks import *
 from extras.experience_memory import *
+import __main__
 
 class Agent(object):
 
     def __init__(self, action_size, lr=0.0001, conv=False, batch_size=32, \
                  gamma=0.99, epsilon_max=1.0, epsilon_min=0.0001,\
                  update_target_freq=3000, train_interval=100, \
-                 mem_size=50000, fname='mitsos_dqn.h5'):
+                 mem_size=50000, ):
         
         self.action_size = action_size
         self.action_space = [i for i in range(action_size)]
@@ -30,7 +31,8 @@ class Agent(object):
         self.gamma = gamma
         self.update_target_freq = update_target_freq
         self.train_interval = train_interval
-        self.model_file = fname
+        fname = 'network_'+ __main__.__file__.split('.')[0] + '.h5'
+        self.model_file = os.path.join(parent_dir,'history',fname)
 
         self.memory = Memory(n_actions=action_size)
 

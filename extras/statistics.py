@@ -26,7 +26,6 @@ class Logger:
     def __init__(self):
         self.Variables = {}
         self.fname = self.get_fname()
-        print(self.fname)
         self.time = []
         self.t = -1
 
@@ -38,7 +37,7 @@ class Logger:
             if not os.path.exists(fdir):
                 return fdir
             p = pathlib.Path(fdir)
-            d = dt.timestamp(dt.now()) - p.stat().st_mtime # time since modeified
+            d = dt.timestamp(dt.now()) - p.stat().st_mtime # time since modified
             if d<3600*2:
                 return fdir
             i += 1

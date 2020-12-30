@@ -27,6 +27,7 @@ from environments.WebotsEnv import *
 from agents.DDQN import Agent
 from extras.experience_memory import Memory
 from networks.networks import *
+import __main__
 
 class Memory(Memory):
     def __init__(self,n_actions):
@@ -70,7 +71,8 @@ class DoubleInputAgent(Agent):
         self.gamma = gamma
         self.update_target_freq = update_target_freq
         self.train_interval = train_interval
-        self.model_file = fname
+        fname = 'network_'+ __main__.__file__.split('.')[0] + '.h5'
+        self.model_file = os.path.join(parent_dir,'history',fname)
 
         self.memory = Memory(n_actions=action_size)
 
