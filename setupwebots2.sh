@@ -1,6 +1,15 @@
 #!/bin/bash
 
-curl -L -O https://github.com/cyberbotics/webots/releases/download/R2021a/webots_2021a_amd64.deb
+FILE=webots_2021a_amd64.deb
+
+if test -f "$FILE"; then
+	echo "deb exists"
+else
+	curl -L -O https://github.com/cyberbotics/webots/releases/download/R2021a/webots_2021a_amd64.deb
+fi
+
+
+#curl -L -O https://github.com/cyberbotics/webots/releases/download/R2021a/webots_2021a_amd64.deb
 
 #####################################3
 
