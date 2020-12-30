@@ -82,10 +82,13 @@ class Agent(object):
     def save_model(self):
         self.model.save_weights(self.model_file)
 
-    def load_model(self):
-        self.model.load_weights(self.model_file)
-        self.target_model.load_weights(self.model_file)
 
+    def load_model(self):
+        if os.path.exists(self.model_file):
+            self.model.load_weights(self.model_file)
+            self.target_model.load_weights(self.model_file)
+            print('model loaded')
+        
 
 
 if __name__ == '__main__':

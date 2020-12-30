@@ -78,12 +78,13 @@ class DoubleInputAgent(Agent):
         self.model.compile(loss='mse',optimizer=Adam(lr))
         self.target_model = MitsosDQNet(action_size)
 
-        if os.path.exists(self.model_file):
-            state = env.reset()
-            state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
-            self.model(state)
-            self.target_model(state)
-            self.load_model()
+        
+        state = env.reset()
+        state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
+        self.model(state)
+        self.target_model(state)
+        
+        self.load_model()
 
 
     def choose_action(self,state):
@@ -98,7 +99,7 @@ class DoubleInputAgent(Agent):
 
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-L = Logger(dir=dir_path,fname='WebotsRound_ddqn')
+L = Logger()
 
 env = Mitsos()
 

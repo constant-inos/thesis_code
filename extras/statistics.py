@@ -1,3 +1,7 @@
+import os,sys,inspect
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+
 import numpy as np 
 import os
 from os import listdir
@@ -7,6 +11,9 @@ import time
 import pandas as pd
 from datetime import datetime
 import pickle
+import __main__
+import pathlib
+from datetime import datetime as dt
 
 
 class VarLog:
@@ -16,12 +23,25 @@ class VarLog:
         self.time = []    
 
 class Logger:
-    def __init__(self,dir,fname):
+    def __init__(self):
         self.Variables = {}
-        self.fname = self.set_name(dir,fname)
+        self.fname = self.get_fname()
         print(self.fname)
         self.time = []
         self.t = -1
+
+    def get_fname(self):
+        i = 0
+        while True:
+            fname = 'log_' + __main__.__file__.split('.')[0] +'_'+ str(i)
+            fdir = os.path.join(parent_dir,'history',fname)
+            if not os.path.exists(fdir):
+                return fdir
+            p = pathlib.Path(fdir)
+            d = dt.timestamp(dt.now()) - p.stat().st_mtime # time since modeified
+            if d<3600*2:
+                return fdir
+            i += 1
 
     def tick(self,t=1):
         self.t += t
@@ -41,22 +61,7 @@ class Logger:
         for i,vname in enumerate(self.Variables):
             add_log(vname,vars[i])
 
-    def set_name(self,directory,fname):
-        i = -1
-        for f in os.listdir(directory):
-            f_ = f.split('.')
-            if len(f_)==2 and f_[1] == 'pkl':
-                f = f_[0]
-                f_ = f.split('_')
-                if len(f_) == 3:
-                    f = f_[0] +'_'+ f_[1]
-                    if f == fname:
-                        i = int(f_[2])
-        return os.path.join(directory,fname+'_'+str(i+1)+'.pkl')
-
     def save_game(self):
-        if os.path.exists(self.fname):
-            os.remove(self.fname)
         f = open(self.fname,"wb")
         pickle.dump(self.Variables,f)
         f.close()
