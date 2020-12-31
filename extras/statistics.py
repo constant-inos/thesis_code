@@ -1,11 +1,12 @@
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir) 
 
 import numpy as np 
 import os
 from os import listdir
-from os.path import isfile, join
+#from os.path import isfile, joinimport 
 import matplotlib.pyplot as plt 
 import time
 import pandas as pd
@@ -14,6 +15,7 @@ import pickle
 import __main__
 import pathlib
 from datetime import datetime as dt
+import extras
 
 
 class VarLog:
@@ -23,9 +25,11 @@ class VarLog:
         self.time = []    
 
 class Logger:
-    def __init__(self):
+    def __init__(self,name=''):
         self.Variables = {}
-        self.fname = self.get_fname()
+        self.fname = name
+        if name=='': 
+            self.fname = self.get_fname()
         self.time = []
         self.t = -1
 
@@ -86,9 +90,7 @@ class Logger:
         return
 
 if __name__ == '__main__':
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    L = Logger(dir=dir_path,fname='vizdoom_ddqn')
-
-    L.load_game(dir_path+'vizdoom_ddqn_0.pkl')
-
+    L = Logger(name='test')
+    path = os.path.join(parent_dir,'history','log_ddqn_webots_0')
+    L.load_game(path)
     L.plot('score')
