@@ -108,7 +108,7 @@ env = Mitsos()
 keyboard = Keyboard() # to control training from keyboard input
 keyboard.enable(env.timestep)
 
-agent = DoubleInputAgent(action_size=3,lr=0.0001,mem_size=40000)
+agent = DoubleInputAgent(action_size=3,lr=0.0001,mem_size=15000)
 
 
 
@@ -117,7 +117,7 @@ n_games = 2000
 training = True
 epsilon_train = agent.epsilon
 k = -1
-filename = 'saveforreload.out'
+filename = 'checkpoint'
 
 
 
@@ -128,19 +128,8 @@ i = 0
 
 
 if os.path.exists(filename):
-    my_shelf = shelve.open(filename)
-    for key in my_shelf:
-        globals()[key]=my_shelf[key]
-    agent.epsilon = epsilon
-    agent.memory.memCounter = memCounter
-    agent.memory.memory = memory
-    L.Variables = Lvars
-    L.fname = fname
-
-    my_shelf.close()
-    del my_shelf,epsilon,memCounter,memory,Lvars,fname
-    print('VARIABLES LOADED')
-    os.remove(filename)
+    print('ok')
+    [agent.memory.memory,agent.memory.memCounter,agent.epsilon,i,scores,L.Variables,L.fname,L.time,L.t] = list(np.load(filename,allow_pickle=True))
 
 while (i<n_games):
 
@@ -186,21 +175,10 @@ while (i<n_games):
     i += 1
 
     if i % RESTORE_DAMAGE == 0:
-        myshelve = shelve.open(filename,'n')
-        epsilon = agent.epsilon
-        memory = agent.memory.memory
-        memCounter = agent.memory.memCounter
-        Lvars = L.Variables
-        fname = L.fname
-        for key in dir():
-            try:
-                myshelve[key] = globals()[key]
-            except TypeError:
-                pass
-                #
-                # __builtins__, my_shelf, and imported modules can not be shelved.
-                #
-                print('ERROR shelving: {0}'.format(key))
-        myshelve.close()
-        del myshelve
+        keep_variables = [agent.memory.memory,agent.memory.memCounter,agent.epsilon,i,scores,L.Variables,L.fname,L.time,L.t]
+        keep_variables = np.array(keep_variables,dtype=object)
+        f = open('checkpoint','wb')
+        np.save(f,keep_variables)
+        f.close()
+        
         env.robot.worldReload()
