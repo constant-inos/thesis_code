@@ -3,8 +3,9 @@ import random
 from collections import deque
 
 class Memory:
-    def __init__(self,n_actions):
+    def __init__(self,n_actions,memSize=15000):
         self.memory = []
+        self.memory = deque(maxlen=memSize)
         self.memCounter = 0
         self.n_actions = n_actions
 

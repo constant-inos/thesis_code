@@ -108,7 +108,7 @@ env = Mitsos()
 keyboard = Keyboard() # to control training from keyboard input
 keyboard.enable(env.timestep)
 
-agent = DoubleInputAgent(action_size=3,lr=0.0001,mem_size=15000)
+agent = DoubleInputAgent(action_size=3,lr=0.00025,mem_size=9000)
 
 
 
@@ -128,8 +128,15 @@ i = 0
 
 
 if os.path.exists(filename):
-    print('ok')
     [agent.memory.memory,agent.memory.memCounter,agent.epsilon,i,scores,L.Variables,L.fname,L.time,L.t] = list(np.load(filename,allow_pickle=True))
+    print(len(agent.memory.memory))
+    #double checkpoint
+    keep_variables = [agent.memory.memory,agent.memory.memCounter,agent.epsilon,i,scores,L.Variables,L.fname,L.time,L.t]
+    keep_variables = np.array(keep_variables,dtype=object)
+    f = open('checkpoint_','wb')
+    np.save(f,keep_variables)
+    f.close()
+
 
 while (i<n_games):
 
