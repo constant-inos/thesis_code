@@ -77,7 +77,7 @@ class Mitsos():
         self.x_start = -0.71
         self.y_start = -0.83
         self.path = []
-        self.map = DynamicMap(self.x_start,self.y_start,map_unit=0.04)
+        self.map = DynamicMap(self.x_start,self.y_start,map_unit=0.005)
         self.first_step = True
         self.x_target,self.y_target = 0,0
         self.set_target()
@@ -222,13 +222,12 @@ class Mitsos():
         #r_optic_flow = OF.optical_flow(cam4[:,:,0],cam4[:,:,3],action)
         #r_reach_target = target_reward((x0,y0),(xn,yn),(xt,yt))
 
-        c1 = 0.1
-        c2 = -1
-        c3 = 10
-        c4 = 0
+        # REWARD FUNCTION 0
         #external_reward = c1*explore + c2*collision + c1*int(explore > self.misc[0])
         #self.misc = [explore,collision]
-        external_reward = -5*collision + int(not was_visited)
+        
+        # REWARD FUNCTION 1
+        external_reward = -2*collision + 0.4*int(not was_visited)
         self.misc = [was_visited,collision]
         
         done = collision or (self.stepCounter >= self.max_steps) 
