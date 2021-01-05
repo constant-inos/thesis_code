@@ -49,12 +49,12 @@ class DynamicMap(object):
 
         wasVisited = False
         if (x>=0 and x<self.map.shape[0]) and (y>=0 and y<self.map.shape[1]):
-            if self.map[x,y]: wasVisited = True 
+            if self.map[x,y]: 
+                wasVisited = True 
             self.map[x,y] = 1
             self.path.append((xd,yd))
             return wasVisited
         else:
-            
             x_temp = self.O[0]
             y_temp = self.O[1]
             if x>=0:
@@ -75,7 +75,7 @@ class DynamicMap(object):
             #time.sleep(5)
 
             self.map = new_map
-            self.visit(xa,ya)
+            return self.visit(xa,ya)
 
         if time.time() - self.t0 < 0:
             self.plot_map()
