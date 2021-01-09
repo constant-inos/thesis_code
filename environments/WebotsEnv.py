@@ -85,7 +85,7 @@ class Mitsos():
 
         #self.discrete_actions = [[0,-1],[1,0],[0,1]] # normal mode
         #self.discrete_actions = [[1,-1],[1,0],[1,1]] # WebotsRound
-        self.discrete_actions = [[1,-0.5],[1,0],[1,0.5]] # try 3
+        self.discrete_actions = [[1,-0.5],[1,0],[1,0.5]] # 3rd try
         self.action_size = len(self.discrete_actions)
         self.stepCounter = 0
 
@@ -232,7 +232,7 @@ class Mitsos():
         # self.misc = [was_visited,collision]
         # if not was_visited: print('New block')
         
-        external_reward = -5*collision
+        external_reward = -5*collision + 1
         self.misc = [was_visited,collision]
         
         done = collision or (self.stepCounter >= self.max_steps) 

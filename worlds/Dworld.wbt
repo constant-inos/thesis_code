@@ -584,7 +584,7 @@ RubberDuck {
 DEF Mitsos E-puck {
   translation 0.717845 0 -0.835527
   rotation 0 1 0 1.570796
-  controller "ddqn_webots_only_sensors"
+  controller "ddqn_webots"
   supervisor TRUE
   emitter_channel 13
   receiver_channel 12
