@@ -84,7 +84,8 @@ class Mitsos():
         self.misc = [0,0]
 
         #self.discrete_actions = [[0,-1],[1,0],[0,1]] # normal mode
-        self.discrete_actions = [[1,-1],[1,0],[1,1]] # WebotsRound
+        #self.discrete_actions = [[1,-1],[1,0],[1,1]] # WebotsRound
+        self.discrete_actions = [[1,-0.5],[1,0],[1,0.5]] # try 3
         self.action_size = len(self.discrete_actions)
         self.stepCounter = 0
 
@@ -223,13 +224,16 @@ class Mitsos():
         #r_reach_target = target_reward((x0,y0),(xn,yn),(xt,yt))
 
         # REWARD FUNCTION 0
-        external_reward = 0.1*explore + -1*collision + 0.1*int(explore > self.misc[0])
-        self.misc = [explore,collision]
+        # external_reward = 0.1*explore + -1*collision + 0.1*int(explore > self.misc[0])
+        # self.misc = [explore,collision]
         
         # REWARD FUNCTION 1
         # external_reward = -2*collision + 0.4*int(not was_visited)
         # self.misc = [was_visited,collision]
         # if not was_visited: print('New block')
+        
+        external_reward = -5*collision
+        self.misc = [was_visited,collision]
         
         done = collision or (self.stepCounter >= self.max_steps) 
         self.stepCounter += 1
