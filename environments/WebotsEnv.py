@@ -43,7 +43,7 @@ def target_reward(P0,P1,TARGET):
 
 class Mitsos():
     # Webots-to-environment-agnostic
-    def __init__(self,max_steps=500):
+    def __init__(self,max_steps=2000):
         self.name = "Mitsos"
         self.max_steps = max_steps
 
