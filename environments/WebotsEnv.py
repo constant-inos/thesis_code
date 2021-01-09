@@ -85,7 +85,7 @@ class Mitsos():
 
         #self.discrete_actions = [[0,-1],[1,0],[0,1]] # normal mode
         #self.discrete_actions = [[1,-1],[1,0],[1,1]] # WebotsRound
-        self.discrete_actions = [[1,-0.5],[1,0],[1,0.5]] # 3rd try
+        self.discrete_actions = [[0.5,-1],[1,0],[0.5,-1]] # 3rd try
         self.action_size = len(self.discrete_actions)
         self.stepCounter = 0
 
