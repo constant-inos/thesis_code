@@ -157,12 +157,14 @@ class MitsosDQNet(keras.Model):
         self.ConvLayers = []
         self.ConvLayers.append( Conv2D(64,kernel_size=9,activation='relu') )
         self.ConvLayers.append( Conv2D(64,kernel_size=5,activation='relu') )
-        self.ConvLayers.append( Conv2D(64,kernel_size=3,activation='relu') )
+        #self.ConvLayers.append( Conv2D(64,kernel_size=3,activation='relu') )
         
         self.flatten = Flatten() 
         self.concat = Concatenate(axis=-1)
         
         self.DenseLayers = []
+        self.DenseLayers.append( Dense(units=512, activation='relu') )
+        self.DenseLayers.append( Dense(units=512, activation='relu') )
         self.DenseLayers.append( Dense(units=512, activation='relu') )
 
         self.value = Dense(units=action_size, activation='linear')
@@ -184,3 +186,4 @@ class MitsosDQNet(keras.Model):
         v = self.value(x)
         
         return v
+
