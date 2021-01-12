@@ -9,6 +9,7 @@ from extras.optical_flow import *
 
 from controller import Robot,Supervisor,Node,Field
 from controller import Camera,DistanceSensor,LED,Motor
+from extras import obstacles
 import numpy as np
 import random
 import cv2
@@ -149,6 +150,26 @@ class Mitsos():
             if (self.collision()): return reward-100
             #return (not WasVisited) + 1
             return reward + 1
+
+    def create_world(self):
+
+        z = 0
+        y = 0.7
+        x = -0.7
+
+        s1 = [[x,0.7,0] for x in np.arange(-0.7,0.8,0.1)] + [[x,-0.7,0] for x in np.arange(-0.7,0.8,0.1)] + \
+             [[-0.7,y,0] for y in np.arange(-0.6,0.7,0.1)] + [[0.7,y,0] for y in np.arange(-0.6,0.7,0.1)] + \
+             [[0.5,-0.8,0],[-0.4,-0.8,0],[0,-0.95,0],[-0.3,-0.8,0],[0.9,-0.9,0],[0.8,-0.5,0]]
+
+        for pos in s1:
+            object = obstacles.get_obj_name()
+            nodeString = obstacles.get_obstacle(object,pos)
+
+            root = self.robot.getRoot()
+            node = root.getField('children')
+            node.importMFNodeFromString(-1,nodeString)
+
+
 
     def place_target(self,x,y,z):
         root = self.robot.getRoot()

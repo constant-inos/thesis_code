@@ -1,0 +1,19 @@
+#VRML_OBJ R2021a utf8
+DEF Mitsos E-puck {
+  translation 0.717845 0 -0.835527
+  rotation 0 1 0 1.570796
+  controller "ddqn_webots"
+  supervisor TRUE
+  emitter_channel 13
+  receiver_channel 12
+  groundSensorsSlot [
+    DEF Bumper TouchSensor {
+      translation -0.03 0 0.03
+      rotation 0 0 1 1.57075
+      boundingObject Cylinder {
+        height 0.05
+        radius 0.04
+      }
+    }
+  ]
+}

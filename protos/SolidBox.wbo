@@ -1,0 +1,5 @@
+#VRML_OBJ R2021a utf8
+SolidBox {
+  translation 0.10441 0.05 -0.294023
+  size 0.1 0.1 0.1
+}

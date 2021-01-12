@@ -1,0 +1,10 @@
+#VRML_OBJ R2021a utf8
+Solid {
+  translation -0.055744 -1.39888e-14 -0.324723
+  scale 1.6 1.6 1.6
+  children [
+    Ball {
+    }
+  ]
+  name "solid(1)"
+}

@@ -1,0 +1,10 @@
+#VRML_OBJ R2021a utf8
+Solid {
+  translation 0.137159 0 0.00656503
+  scale 0.13 0.13 0.13
+  children [
+    Toilet {
+    }
+  ]
+  name "solid(6)"
+}

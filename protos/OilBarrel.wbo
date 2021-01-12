@@ -1,0 +1,10 @@
+#VRML_OBJ R2021a utf8
+Solid {
+  translation -0.127113 1.11022e-16 -0.260485
+  scale 0.17 0.17 0.17
+  children [
+    OilBarrel {
+    }
+  ]
+  name "solid(9)"
+}

@@ -1,0 +1,9 @@
+#VRML_OBJ R2021a utf8
+DEF chair Solid {
+  translation 0.0813719 -2.33143e-15 -0.136474
+  scale 0.2 0.2 0.2
+  children [
+    Chair {
+    }
+  ]
+}

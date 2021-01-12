@@ -1,0 +1,10 @@
+#VRML_OBJ R2021a utf8
+Solid {
+  translation -0.0143322 5.55108e-17 -0.288251
+  scale 1.4 1.4 1.4
+  children [
+    ComputerMouse {
+    }
+  ]
+  name "solid(8)"
+}

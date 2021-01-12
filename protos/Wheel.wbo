@@ -1,0 +1,10 @@
+#VRML_OBJ R2021a utf8
+Solid {
+  translation 0.105842 0 -0.187725
+  scale 2.5 2.5 2.5
+  children [
+    LegoWheel {
+    }
+  ]
+  name "solid(7)"
+}
