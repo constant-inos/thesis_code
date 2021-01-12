@@ -1,0 +1,92 @@
+#VRML_SIM R2021a utf8
+WorldInfo {
+  coordinateSystem "NUE"
+}
+Viewpoint {
+  fieldOfView 1.3
+  orientation 0.0020504659883491716 0.860748816735742 0.5090258049227472 3.136563072689888
+  position 0.011113025186444525 1.4072984944290814 -1.0320598643810195
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+DEF MyFloor Floor {
+  size 2 2
+}
+DEF MyWall1 Solid {
+  translation 0 0.05 1
+  children [
+    DEF wall1 Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 2 0.1 0.01
+      }
+    }
+  ]
+  name "solid(2)"
+  boundingObject USE wall1
+}
+DEF MyWall2 Solid {
+  translation 0 0.05 -1
+  children [
+    DEF wall2 Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 2 0.1 0.01
+      }
+    }
+  ]
+  name "solid(3)"
+  boundingObject USE wall2
+}
+DEF MyWall3 Solid {
+  translation 1 0.05 0
+  rotation 0 1 0 1.5707996938995747
+  children [
+    DEF wall3 Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 2 0.1 0.01
+      }
+    }
+  ]
+  name "solid(4)"
+  boundingObject USE wall3
+}
+DEF MyWall4 Solid {
+  translation -1 0.05 0
+  rotation 0 1 0 1.5707996938995747
+  children [
+    DEF wall22 Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 2 0.1 0.01
+      }
+    }
+  ]
+  name "solid(5)"
+  boundingObject USE wall22
+}
+DEF Mitsos E-puck {
+  translation 0.717845 0 -0.835527
+  rotation 0 1 0 1.570796
+  controller "ddqn_webots"
+  supervisor TRUE
+  emitter_channel 13
+  receiver_channel 12
+  groundSensorsSlot [
+    DEF Bumper TouchSensor {
+      translation -0.03 0 0.03
+      rotation 0 0 1 1.57075
+      boundingObject Cylinder {
+        height 0.05
+        radius 0.04
+      }
+    }
+  ]
+}
