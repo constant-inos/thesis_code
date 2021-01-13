@@ -1,4 +1,3 @@
-
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
@@ -55,18 +54,18 @@ class Mitsos():
         self.bumper.enable(self.timestep)
         
         # camera sensor
-        self.camera = self.robot.getCamera("camera")
+        self.camera = self.robot.getDevice("camera")
         self.camera.enable(self.timestep)
         # ir sensors
         IR_names = ["ps0", "ps1", "ps2", "ps3", "ps4", "ps5", "ps6", "ps7"]
-        self.InfraredSensors = [self.robot.getDistanceSensor(s) for s in IR_names]
+        self.InfraredSensors = [self.robot.getDevice(s) for s in IR_names]
         for ir in self.InfraredSensors: ir.enable(self.timestep)
         
         # wheels motors
         motors = ["left wheel motor","right wheel motor"]
         self.wheels = []
         for i in range(len(motors)):
-            self.wheels.append(self.robot.getMotor(motors[i]))
+            self.wheels.append(self.robot.getDevice(motors[i]))
             self.wheels[i].setPosition(float('inf'))
             self.wheels[i].setVelocity(0)
 
