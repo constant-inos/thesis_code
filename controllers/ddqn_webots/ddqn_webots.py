@@ -58,7 +58,7 @@ class Memory(Memory):
 
 class DoubleInputAgent(Agent):
     def __init__(self, action_size, lr=0.0001, conv=False, batch_size=32, \
-                 gamma=0.99, epsilon_max=1.0, epsilon_min=0.0001,\
+                 gamma=0.99, epsilon_max=1.0, epsilon_min=0.0001, epsilon_dec=1/100000,\
                  update_target_freq=3000, train_interval=100, \
                  mem_size=50000, fname='dqn.h5'):
         self.action_size = action_size
@@ -67,6 +67,7 @@ class DoubleInputAgent(Agent):
         self.epsilon_max = epsilon_max
         self.epsilon_min = epsilon_min
         self.epsilon = epsilon_max
+        self.epsilon_dec = epsilon_dec
         self.batch_size = batch_size
         self.gamma = gamma
         self.update_target_freq = update_target_freq
@@ -130,12 +131,6 @@ i = 0
 if os.path.exists(filename):
     [agent.memory.memory,agent.memory.memCounter,agent.epsilon,i,scores,L.Variables,L.fname,L.time,L.t] = list(np.load(filename,allow_pickle=True))
     print(len(agent.memory.memory))
-    #double checkpoint
-    keep_variables = [agent.memory.memory,agent.memory.memCounter,agent.epsilon,i,scores,L.Variables,L.fname,L.time,L.t]
-    keep_variables = np.array(keep_variables,dtype=object)
-    f = open('checkpoint_','wb')
-    np.save(f,keep_variables)
-    f.close()
 
 
 while (i<n_games):
