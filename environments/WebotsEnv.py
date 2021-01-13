@@ -187,7 +187,7 @@ class Mitsos():
     def reset(self,reset_position=True):
         self.stepCounter = 0
         xs,ys = self.x_start,self.y_start
-        if (len(self.path)>0): xs,ys = self.path[-10]
+        if (len(self.path)>10): xs,ys = self.path[-10]
         self.path = []
         self.map.path = []
         OF.reset()
