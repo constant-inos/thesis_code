@@ -143,12 +143,6 @@ class Mitsos():
             self.robot.step(self.timestep)
         return 
 
-    def get_reward(self,version='sparse'):
-        reward = 1
-        if version == 'sparse':
-            if (self.collision()): return reward-100
-            #return (not WasVisited) + 1
-            return reward + 1
 
     def create_world(self):
 
@@ -193,6 +187,7 @@ class Mitsos():
     def reset(self,reset_position=True):
         self.stepCounter = 0
         xs,ys = self.x_start,self.y_start
+        if (len(self.path)>0): xs,ys = self.path[-10]
         self.path = []
         self.map.path = []
         OF.reset()
@@ -240,20 +235,12 @@ class Mitsos():
 
         explore = self.map.spatial_std_reward()
         collision = self.collision()
+        dist_from_target = D((xn,yn),(xt,yt))
         #r_optic_flow = OF.optical_flow(cam4[:,:,0],cam4[:,:,3],action)
-        #r_reach_target = target_reward((x0,y0),(xn,yn),(xt,yt))
 
-        # REWARD FUNCTION 0
-        # external_reward = 0.1*explore + -1*collision + 0.1*int(explore > self.misc[0])
-        # self.misc = [explore,collision]
-        
-        # REWARD FUNCTION 1
-        # external_reward = -2*collision + 0.4*int(not was_visited)
-        # self.misc = [was_visited,collision]
-        # if not was_visited: print('New block')
-        
-        external_reward = -5*collision + 1
-        self.misc = [was_visited,collision]
+
+        external_reward = -20*collision + 1 + int(dist_from_target<misc[0])
+        self.misc = [dist_from_target,collision]
         
         done = collision or (self.stepCounter >= self.max_steps) 
         self.stepCounter += 1
