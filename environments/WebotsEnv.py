@@ -239,7 +239,7 @@ class Mitsos():
         #r_optic_flow = OF.optical_flow(cam4[:,:,0],cam4[:,:,3],action)
 
 
-        external_reward = -20*collision + 1 + int(dist_from_target<misc[0])
+        external_reward = -20*collision + 1 + int(dist_from_target<self.misc[0])
         self.misc = [dist_from_target,collision]
         
         done = collision or (self.stepCounter >= self.max_steps) 
