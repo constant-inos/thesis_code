@@ -16,30 +16,15 @@ import cv2
 OF = OpticalFlow()
 
 def D(A,B):
-    (x,y) = A
-    (a,b) = B
+    if len(A) == 3:
+        (x,y,z) = A
+        (a,b,c) = B
+    else:
+        (x,y) = A
+        (a,b) = B
     return np.sqrt((x-a)**2 + (y-b)**2)
 
-def target_reward(P0,P1,TARGET):
 
-    d0 = D(P0,TARGET)
-    d1 = D(P1,TARGET)
-
-    # version 1: distance form target
-    c = 0.5
-    R1 = 1 / (d1+0.1)
-
-    #version 2: difference of distances
-    dD = d1-d0
-    R2 = -dD*5
-
-    flag = False
-    if R2 < 0.0005 and R2 > -0.0005:
-        if np.sign(R1)==-1: R1 = -1
-    else:
-        R1 = 0
-
-    return R1
 
 class Mitsos():
     # Webots-to-environment-agnostic
@@ -74,20 +59,29 @@ class Mitsos():
         self.cam_shape = (self.camera.getWidth(),self.camera.getHeight())
         self.sensors_shape = (14,)
 
-        self.x_start = -0.71
-        self.y_start = -0.83
+        self.task = 'Random_Obstacle_Avoidance'
+        self.START = self.random_position()
+        self.GOAL = self.random_position()
+        self.create_world()
+
+
         self.path = []
-        self.map = DynamicMap(self.x_start,self.y_start,map_unit=0.2)
+        self.map = DynamicMap(self.START[0],self.START[1],map_unit=0.2)
         self.first_step = True
-        self.x_target,self.y_target = 0,0
-        self.set_target()
         self.misc = [0,0]
 
-        #self.discrete_actions = [[0,-1],[1,0],[0,1]] # normal mode
-        #self.discrete_actions = [[1,-1],[1,0],[1,1]] # WebotsRound
         self.discrete_actions = [[0.5,-1],[1,0],[0.5,1]] # 3rd try
         self.action_size = len(self.discrete_actions)
         self.stepCounter = 0
+
+    def random_position(self):
+        x = random.random()*1.8 - 1
+        y = random.random()*1.8 - 1
+        z = 0
+        return [x,y,z]
+
+    def reward_function(self,dist_from_goal,prev_dist_from_goal,speed,collision):
+        return int(dist_from_goal < prev_dist_from_goal)*speed - 20*collision + 0.5
 
 
     def read_ir(self):
@@ -144,56 +138,13 @@ class Mitsos():
         return 
 
 
-    def create_world(self):
-
-        z = 0
-        y = 0.7
-        x = -0.7
-
-        s1 = [[x,0.7,0] for x in np.arange(-0.7,0.8,0.1)] + [[x,-0.7,0] for x in np.arange(-0.7,0.8,0.1)] + \
-             [[-0.7,y,0] for y in np.arange(-0.6,0.7,0.1)] + [[0.7,y,0] for y in np.arange(-0.6,0.7,0.1)] + \
-             [[0.5,-0.8,0],[-0.4,-0.8,0],[0,-0.95,0],[-0.3,-0.8,0],[0.9,-0.9,0],[0.8,-0.5,0]]
-
-        for pos in s1:
-            object = obstacles.get_obj_name()
-            nodeString = obstacles.get_obstacle(object,pos)
-
-            root = self.robot.getRoot()
-            node = root.getField('children')
-            node.importMFNodeFromString(-1,nodeString)
-
-
-
-    def place_target(self,x,y,z):
-        root = self.robot.getRoot()
-        node = root.getField('children')
-        if not self.first_step: node.removeMF(-1)
-        else: self.first_step = False
-        translation = 'translation '+str(y)+' '+str(z)+' '+str(x)
-        shape = 'Cylinder { height 0.1 radius 0.02}'
-        nodeString = " Solid { "+translation+" children [Shape {appearance PBRAppearance {baseColor "+"1 0 0"+" roughness 1 metalness 0} geometry "+shape+" } ]  boundingObject "+shape+"  physics Physics {  }} "
-        node.importMFNodeFromString(-1,"DEF My_Solid_"+'TARGET'+nodeString)
-
-    def set_target(self):
-        # in analog coordinates
-        x = (random.random() - 0.5)*2
-        z = 0
-        y = (random.random() - 0.5)*2
-        #x,y,z = 0,0,0.9
-        #self.place_target(x,y,z)
-        self.x_target = x
-        self.y_target = y
-
     def reset(self,reset_position=True):
         self.stepCounter = 0
-        if (len(self.path)>20): self.x_start,self.y_start = self.path[-20]
-        xs,ys = self.x_start,self.y_start
         self.path = []
         self.map.path = []
         OF.reset()
-        self.set_target()
         if (reset_position):
-            self.set_position(xs,ys,0.005)  
+            self.set_position(self.START[0],self.START[1],0.005)  
             self.set_rotation(3.14)
         state,_,_,_ = self.step(1)
         return state
@@ -202,7 +153,7 @@ class Mitsos():
     def step(self,action_idx):
         action = self.discrete_actions[action_idx]
         stacked_frames = 4
-        xt,yt = self.x_target,self.y_target
+        [xg,yg,_] = self.GOAL
         x0,y0,z = self.get_robot_position()
         was_visited = self.map.visit(x0,y0)
         self.path.append((x0,y0))
@@ -218,7 +169,7 @@ class Mitsos():
             self.robot.step(self.timestep)
             xn,yn,z = self.get_robot_position()
 
-            pos = [xp,yp,xn,yn,xt,yt]
+            pos = [xp,yp,xn,yn,xg,yg]
             xp,yp=xn,yn
             sensors = np.array(list(sensors) + pos)
 
@@ -230,23 +181,86 @@ class Mitsos():
 
         xn,yn,z = self.get_robot_position()
 
-        if action==[0,0]:
-            return state,0,0,''
 
         explore = self.map.spatial_std_reward()
         collision = self.collision()
-        dist_from_target = D((xn,yn),(xt,yt))
+        dist_from_goal = D((xn,yn),(xg,yg))
         #r_optic_flow = OF.optical_flow(cam4[:,:,0],cam4[:,:,3],action)
 
-
-        external_reward = -20*collision + 1 + int(dist_from_target<self.misc[0])
-        self.misc = [dist_from_target,collision]
+        # forward speed: action[0]
+        # previous distance from goal: self.misc[0]
+        reward = self.reward_function(dist_from_goal,self.misc[0],action[0],collision)
+        self.misc = [dist_from_goal,collision]
         
-        done = collision or (self.stepCounter >= self.max_steps) 
+        done = collision or (self.stepCounter >= self.max_steps) or (dist_from_goal < 0.05)
         self.stepCounter += 1
         info = ''
-        return state,external_reward,done,info 
+        return state,reward,done,info 
 
 
-    def render():
+    def render(self):
         return
+
+
+
+    def create_world(self):
+
+        self.set_obstacle_positions()
+
+        p = self.obstacles
+
+        for pos in p:
+            nodeString = self.get_object_proto(pos=pos)
+
+            root = self.robot.getRoot()
+            node = root.getField('children')
+            node.importMFNodeFromString(-1,nodeString)
+
+    def set_obstacle_positions(self):
+
+        self.obstacles = []
+
+        if self.task == 'Simple_Obstacle_Avoidance':
+            Ox = (self.GOAL[0] + self.START[0]) / 2
+            Oy = (self.GOAL[1] + self.START[1]) / 2
+            Oz = 0
+            self.obstacles.append([Ox,Oy,Oz])
+
+        if self.task == 'Random_Obstacle_Avoidance':
+
+            n = int(D(self.START,self.GOAL) // 0.1 // 2)
+            n = 3
+
+            x_max = max(self.START[0],self.GOAL[0])
+            x_min = min(self.START[0],self.GOAL[0])
+            y_max = max(self.START[1],self.GOAL[1])
+            y_min = min(self.START[1],self.GOAL[1])
+
+            for _ in range(n):
+                Ox = random.random()*(x_max - x_min) + x_min
+                Oy = random.random()*(y_max - y_min) + y_min
+                Oz = 0
+
+                self.obstacles.append([Ox,Oy,Oz])
+
+
+    def get_object_proto(self,object='',pos=[0,0,0]):
+        # needs change
+        objects = {'Chair':'0.2 ',
+           'Ball':'1.6 ',
+           'ComputerMouse':'1.4 ',
+           'OilBarrel':'0.17 ',
+           'Toilet':'0.13 ',
+           'SolidBox':''}
+
+        if object=='':
+            object = np.random.choice(list(objects.keys()))
+
+        if object=='SolidBox':
+            translation = str(pos[1])+' '+str(pos[2]+0.05)+' '+str(pos[0])
+            return "SolidBox {  translation "+translation+"  size 0.1 0.1 0.1}"
+            
+        translation = str(pos[1])+' '+str(pos[2])+' '+str(pos[0])
+        scale = objects[object]*3
+        proto = "Solid {  translation "+translation+"  scale "+scale+" children [    "+object+" {    }  ]}"
+        return proto
