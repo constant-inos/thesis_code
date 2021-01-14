@@ -17,7 +17,7 @@ import __main__
 class Agent(object):
 
     def __init__(self, action_size, lr=0.0001, conv=False, batch_size=32, \
-                 gamma=0.99, epsilon_max=1.0, epsilon_min=0.0001,\
+                 gamma=0.99, epsilon_max=1.0, epsilon_min=0.0001, epsilon_dec=1/100000,\
                  update_target_freq=3000, train_interval=100, \
                  mem_size=50000, ):
         
@@ -27,6 +27,7 @@ class Agent(object):
         self.epsilon_max = epsilon_max
         self.epsilon_min = epsilon_min
         self.epsilon = epsilon_max
+        self.epsilon_dec = epsilon_dec
         self.batch_size = batch_size
         self.gamma = gamma
         self.update_target_freq = update_target_freq
@@ -54,7 +55,7 @@ class Agent(object):
 
     def learn(self):
         if self.epsilon > self.epsilon_min:
-            self.epsilon -= (self.epsilon_max - self.epsilon_min) / 50000
+            self.epsilon -= (self.epsilon_max - self.epsilon_min) / self.epsilon_dec
         if self.memory.memCounter % self.update_target_freq == 0:
             self.update_target_model()
 
