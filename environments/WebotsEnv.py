@@ -28,7 +28,7 @@ def D(A,B):
 
 class Mitsos():
     # Webots-to-environment-agnostic
-    def __init__(self,max_steps=2000):
+    def __init__(self,max_steps=500):
         self.name = "Mitsos"
         self.max_steps = max_steps
 
@@ -59,7 +59,7 @@ class Mitsos():
         self.cam_shape = (self.camera.getWidth(),self.camera.getHeight())
         self.sensors_shape = (14,)
 
-        self.task = 'Random_Obstacle_Avoidance'
+        self.task = 'Goal_Following'
         self.START = self.random_position()
         self.GOAL = self.random_position()
         self.create_world()
@@ -81,7 +81,15 @@ class Mitsos():
         return [x,y,z]
 
     def reward_function(self,dist_from_goal,prev_dist_from_goal,speed,collision):
-        return int(dist_from_goal < prev_dist_from_goal)*speed - 20*collision + 0.5
+        
+        R_life_is_good = 1
+        
+        R_reach_goal = int(dist_from_goal < prev_dist_from_goal) - int(not dist_from_goal < prev_dist_from_goal)
+        
+        R_collision = - 20*collision
+        
+        
+        return R_reach_goal*2
 
 
     def read_ir(self):
@@ -139,6 +147,11 @@ class Mitsos():
 
 
     def reset(self,reset_position=True):
+        
+        self.START = self.random_position()
+        self.GOAL = self.random_position()
+        self.create_world()
+        
         self.stepCounter = 0
         self.path = []
         self.map.path = []

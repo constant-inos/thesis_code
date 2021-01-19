@@ -59,4 +59,4 @@ export LD_LIBRARY_PATH=$WEBOTS_HOME/lib/controller
 #########################################
 
 cd '/content/gdrive/MyDrive/Colab Notebooks/thesis_code'
-sudo xvfb-run --auto-servernum webots --mode=fast --stdout --stderr --minimize --batch --no-sandbox ./worlds/Dworld.wbt
+sudo xvfb-run --auto-servernum webots --mode=fast --stdout --stderr --minimize --batch --no-sandbox ./worlds/Eworld.wbt

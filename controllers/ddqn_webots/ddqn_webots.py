@@ -28,6 +28,7 @@ from agents.DDQN import Agent
 from extras.experience_memory import Memory
 from networks.networks import *
 import __main__
+from datetime import datetime
 
 class Memory(Memory):
     def __init__(self,n_actions):
@@ -58,7 +59,7 @@ class Memory(Memory):
 
 class DoubleInputAgent(Agent):
     def __init__(self, action_size, lr=0.0001, conv=False, batch_size=32, \
-                 gamma=0.99, epsilon_max=1.0, epsilon_min=0.0001, epsilon_dec=1/100000,\
+                 gamma=0.99, epsilon_max=1.0, epsilon_min=0.0001, epsilon_step=(1/50000),\
                  update_target_freq=3000, train_interval=100, \
                  mem_size=50000, fname='dqn.h5'):
         self.action_size = action_size
@@ -67,7 +68,7 @@ class DoubleInputAgent(Agent):
         self.epsilon_max = epsilon_max
         self.epsilon_min = epsilon_min
         self.epsilon = epsilon_max
-        self.epsilon_dec = epsilon_dec
+        self.epsilon_step = epsilon_step
         self.batch_size = batch_size
         self.gamma = gamma
         self.update_target_freq = update_target_freq
@@ -129,8 +130,15 @@ i = 0
 
 
 if os.path.exists(filename):
-    [agent.memory.memory,agent.memory.memCounter,agent.epsilon,i,scores,L.Variables,L.fname,L.time,L.t] = list(np.load(filename,allow_pickle=True))
-    print(len(agent.memory.memory))
+    [agent.memory.memory,agent.memory.memCounter,agent.epsilon,env.task,i,scores,L.Variables,L.fname,L.time,L.t] = list(np.load(filename,allow_pickle=True))
+
+    # if i>200 and env.task=='Goal_Following':
+    #     env.task = 'Simple_Obstacle_Avoidance'
+    #     agent.epsilon = 0.5
+    # if i>500 and env.task=='Simple_Obstacle_Avoidance':
+    #     env.task = 'Random_Obstacle_Avoidance'
+    #     agent.epsilon = 0.5
+
 
 
 while (i<n_games):
@@ -139,7 +147,8 @@ while (i<n_games):
     score = 0
     observation = env.reset()
     ep_steps = 0
-    print('START GAME',i)
+    current_time = datetime.now().strftime("%H:%M:%S")
+    print('GAME:',i,' - TASK:',env.task,' - CURRENT TIME:',current_time)
     while not done:
 
         action_idx = agent.choose_action(observation)
@@ -171,13 +180,24 @@ while (i<n_games):
     L.add_log('score',score)
     L.save_game()
     scores.append(score)
-    print('EPISODE:',i,'STEPS:',ep_steps,'EPSILON',agent.epsilon,'SCORE:',score,'AVG SCORE:',np.mean(scores))
+    
+    if agent.epsilon < 0.1:
+        p = env.path
+        p.append(env.GOAL)
+        p = np.array(p)
+        f = open('path','wb')
+        np.save(f,p)
+        f.close()
+
+    
+    
+    print('EPISODE:',i,'STEPS:',ep_steps,'EPSILON',agent.epsilon,'SCORE:',score,'AVG SCORE:',np.mean(scores),'\n')
     agent.save_model()
 
     i += 1
 
     if i % RESTORE_DAMAGE == 0:
-        keep_variables = [agent.memory.memory,agent.memory.memCounter,agent.epsilon,i,scores,L.Variables,L.fname,L.time,L.t]
+        keep_variables = [agent.memory.memory,agent.memory.memCounter,agent.epsilon,env.task,i,scores,L.Variables,L.fname,L.time,L.t]
         keep_variables = np.array(keep_variables,dtype=object)
         f = open('checkpoint','wb')
         np.save(f,keep_variables)
