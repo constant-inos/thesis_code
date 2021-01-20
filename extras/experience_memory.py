@@ -55,25 +55,29 @@ class Memory:
 
 
 
-    # def read_memory0(self):
-    #     samples = self.memory
-    #     batch_size = self.memCounter
+class MemoryDouble(Memory):
+    def __init__(self,n_actions,memSize=15000):
+        super().__init__(n_actions,memSize)
+        
+    def sample_memory(self,n_samples):
+        samples = random.sample(self.memory,n_samples)
+        batch_size = self.memCounter
+        
+        num_lists = len(self.memory[0])
+        lists = [[] for _ in range(num_lists+2)]
+        
+        for sample in samples:
+            image = sample[0][0]
+            image_ = sample[3][0]
+            sensors = sample[0][1]
+            sensors_ = sample[3][1]
+            sample = [image,sensors] + list(sample[1:3]) + [image_,sensors_] + list(sample[4:])
+            for i in range(len(sample)):
+                lists[i].append(sample[i])
 
-    #     states = np.zeros((batch_size,)+self.state_shape)
-    #     actions = np.zeros((batch_size,))
-    #     rewards = np.zeros((batch_size,))
-    #     states_ = np.zeros((batch_size,)+self.state_shape)
-    #     dones = np.zeros((batch_size,))
-    #     log_probs = np.zeros((batch_size,))
-    #     values = np.zeros((batch_size,))
+        
+        lists = [np.vstack(l) if isinstance(l[0],np.ndarray) else np.vstack(l).reshape(-1) for l in lists ]
 
-    #     for i in range(batch_size):
-    #         states[i,:] = samples[i][0]
-    #         actions[i] = samples[i][1]
-    #         rewards[i] = samples[i][2]
-    #         states_[i,:] = samples[i][3]
-    #         dones[i] = samples[i][4]
-    #         log_probs[i] = samples[i][5]
-    #         values[i] = samples[i][6]
+        lists = [[lists[0],lists[1]]] + lists[2:4] + [[lists[4],lists[5]]] + lists[6:]
 
-    #     return states,actions,rewards,states_,dones,log_probs,values
+        return tuple(lists)

@@ -19,7 +19,7 @@ class Agent(object):
     def __init__(self, action_size, lr=0.0001, conv=False, batch_size=32, \
                  gamma=0.99, epsilon_max=1.0, epsilon_min=0.0001, epsilon_step=1/100000,\
                  update_target_freq=3000, train_interval=100, \
-                 mem_size=50000, ):
+                 mem_size=15000, Network=DQNetwork, Memory=Memory,n_inputs=1):
         
         self.action_size = action_size
         self.action_space = [i for i in range(action_size)]
@@ -27,25 +27,29 @@ class Agent(object):
         self.epsilon_max = epsilon_max
         self.epsilon_min = epsilon_min
         self.epsilon = epsilon_max
-        self.epsilon_step = epsilon_dec
+        self.epsilon_step = epsilon_step
         self.batch_size = batch_size
         self.gamma = gamma
         self.update_target_freq = update_target_freq
         self.train_interval = train_interval
         fname = 'network_'+ __main__.__file__.split('.')[0] + '.h5'
         self.model_file = os.path.join(parent_dir,'history',fname)
+        self.n_inputs = n_inputs
 
-        self.memory = Memory(n_actions=action_size)
+        self.memory = Memory(n_actions=action_size,memSize=mem_size)
 
-        self.model = DQNetwork(action_size,conv=conv)
+        self.model = Network(action_size)
         self.model.compile(loss='mse',optimizer=Adam(lr))
-        self.target_model = DQNetwork(action_size,conv=conv)
-    
+        self.target_model = Network(action_size)
+        
     def choose_action(self,state):
         if np.random.random() < self.epsilon:
             action_idx = np.random.choice(self.action_space)
         else:
-            state = tf.convert_to_tensor([state])
+            if self.n_inputs == 2:
+                state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
+            else:
+                state = tf.convert_to_tensor([state])
             action = self.model(state).numpy()[0]
             action_idx = np.argmax(action)
         return action_idx
@@ -91,9 +95,8 @@ class Agent(object):
             self.model.load_weights(self.model_file)
             self.target_model.load_weights(self.model_file)
             print('model loaded')
-        
 
-
+                     
 if __name__ == '__main__':
     import gym
     from statistics import *
@@ -127,3 +130,6 @@ if __name__ == '__main__':
         L.save_game()        
         scores.append(score)
         print('GAME:',i,'SCORE:',score,'AVG SCORE:',np.mean(scores[-100:]))
+
+
+

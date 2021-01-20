@@ -25,94 +25,28 @@ from extras.statistics import *
 
 from environments.WebotsEnv import *
 from agents.DDQN import Agent
-from extras.experience_memory import Memory
+from extras.experience_memory import *
 from networks.networks import *
 import __main__
 from datetime import datetime
-
-class Memory(Memory):
-    def __init__(self,n_actions):
-        super(Memory,self).__init__(n_actions=n_actions)
-
-    def sample_memory(self,n_samples):
-        samples = random.sample(self.memory,n_samples)
-        batch_size = self.memCounter
-        
-        num_lists = len(self.memory[0])
-        lists = [[] for _ in range(num_lists+2)]
-        
-        for sample in samples:
-            image = sample[0][0]
-            image_ = sample[3][0]
-            sensors = sample[0][1]
-            sensors_ = sample[3][1]
-            sample = [image,sensors] + list(sample[1:3]) + [image_,sensors_] + list(sample[4:])
-            for i in range(len(sample)):
-                lists[i].append(sample[i])
-
-        
-        lists = [np.vstack(l) if isinstance(l[0],np.ndarray) else np.vstack(l).reshape(-1) for l in lists ]
-
-        lists = [[lists[0],lists[1]]] + lists[2:4] + [[lists[4],lists[5]]] + lists[6:]
-
-        return tuple(lists)
-
-class DoubleInputAgent(Agent):
-    def __init__(self, action_size, lr=0.0001, conv=False, batch_size=32, \
-                 gamma=0.99, epsilon_max=1.0, epsilon_min=0.0001, epsilon_step=(1/50000),\
-                 update_target_freq=3000, train_interval=100, \
-                 mem_size=50000, fname='dqn.h5'):
-        self.action_size = action_size
-        self.action_space = [i for i in range(action_size)]
-        self.lr = lr
-        self.epsilon_max = epsilon_max
-        self.epsilon_min = epsilon_min
-        self.epsilon = epsilon_max
-        self.epsilon_step = epsilon_step
-        self.batch_size = batch_size
-        self.gamma = gamma
-        self.update_target_freq = update_target_freq
-        self.train_interval = train_interval
-        fname = 'network_'+ __main__.__file__.split('.')[0] + '.h5'
-        self.model_file = os.path.join(parent_dir,'history',fname)
-
-        self.memory = Memory(n_actions=action_size)
-
-        self.model = MitsosDQNet(action_size)
-        self.model.compile(loss='mse',optimizer=Adam(lr))
-        self.target_model = MitsosDQNet(action_size)
-
-        
-        state = env.reset()
-        state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
-        self.model(state)
-        self.target_model(state)
-        
-        self.load_model()
-
-
-    def choose_action(self,state):
-
-        if np.random.random() < self.epsilon:
-            action_idx = np.random.choice(self.action_space)
-        else:
-            state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
-            action = self.model(state).numpy()[0]
-            action_idx = np.argmax(action)
-        return action_idx
 
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 L = Logger()
 
 env = Mitsos()
+state = env.reset()
 
 keyboard = Keyboard() # to control training from keyboard input
 keyboard.enable(env.timestep)
 
-agent = DoubleInputAgent(action_size=3,lr=0.00025,mem_size=9000)
+agent = Agent(action_size=3, lr=0.00025, mem_size=15000, Network=MitsosDQNet, Memory=MemoryDouble, n_inputs=2)
 
+state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
+agent.model(state)
+agent.target_model(state)
 
+agent.load_model()
 
 RESTORE_DAMAGE = 30
 n_games = 2000
