@@ -1,6 +1,6 @@
 import tensorflow as tf
 import tensorflow.keras as keras
-from tensorflow.keras.layers import Dense,Conv2D,Flatten,Concatenate
+from tensorflow.keras.layers import Dense,Conv2D,Flatten,Concatenate,MaxPooling2D
 
 class PPONetwork(keras.Model):
     def __init__(self,n_actions,conv=False):
@@ -32,24 +32,6 @@ class PPONetwork(keras.Model):
         return policy, value
 
 
-# class PPONetwork(keras.Model):
-#     def __init__(self,n_actions):
-#         super(PPONetwork,self).__init__()
-
-#         self.fc1 = Dense(256,activation='relu')
-#         self.fc2 = Dense(256,activation='relu')
-        
-#         self.v = Dense(1,activation='linear')
-#         self.pi = Dense(n_actions,activation='softmax')
-
-#     def call(self,state):
-#         x = self.fc1(state)
-#         x = self.fc2(x)
-
-#         policy = self.pi(x)
-#         value = self.v(x)
-
-#         return policy, value
 
 class ActorCriticNetwork(keras.Model):
     def __init__(self, n_actions, name='actor_critic'):
@@ -187,3 +169,93 @@ class MitsosDQNet(keras.Model):
         
         return v
 
+class SimpleNet(keras.Model):
+    def __init__(self,output_size,units=[64]):
+        super(SimpleNet, self).__init__()
+
+        self.Layers = []
+        for n in units:
+            self.Layers.append( Dense(units=n, activation='relu') )
+        self.Layers.append( Dense(units=output_size, activation='linear') )
+    
+    def call(self,state):
+        x = state
+
+        for layer in self.Layers:
+            x = layer(x)
+            
+        return x
+        
+################################################################################################################################
+
+class DenseNet(keras.Model):
+    def __init__(self,units=[64]):
+        super(DenseNet, self).__init__()
+
+        self.Layers = []
+        for n in units:
+            self.Layers.append( Dense(units=n, activation='relu') )
+
+    def call(self,INPUT):
+        x = INPUT
+
+        for layer in self.Layers:
+            x = layer(x)
+            
+        return x
+        
+        
+class ConvNet(keras.Model):
+    def __init__(self,filters=[64,64]):
+        super(ConvNet, self).__init__()
+
+        self.Layers = []
+        for n in filters:
+            self.Layers.append( Conv2D(filters=n, kernel_size=3, activation='relu') )
+            self.Layers.append( MaxPooling2D((2,2)) )
+        self.Layers.append( Flatten() )
+
+    def call(self,INPUT):
+        x = INPUT
+
+        for layer in self.Layers:
+            x = layer(x)
+            
+        return x
+        
+        
+class Net0(keras.Model):
+    def __init__(self,output_size):
+        super(Net0,self).__init__()
+        
+        self.main = DenseNet(units=[512,512])
+        self.out = Dense(output_size,activation='linear')
+        
+    def call(self,INPUT):
+        x = INPUT
+        x = self.main(x)
+        x = self.out(x)
+        return x
+        
+class Net2(keras.Model):
+    def __init__(self,output_size):
+        super(Net0,self).__init__()
+        
+        self.conv = ConvNet(filters=[64,64])
+        self.simple = DenseNet(units=[64])
+        self.concat = Concatenate(axis=-1)
+        
+        self.main = DenseNet(units=[128,128])
+        self.out = Dense(output_size,activation='linear')
+        
+    def call(self,INPUT):
+        x1 = INPUT[0] # camera data
+        x2 = INPUT[1] # sensors data
+        
+        x1 = self.conv(x1)
+        x2 = self.simple(x2)
+        x = self.concat([x1,x2])
+        x = self.main(x)
+        x = self.out(x)
+        
+        return x

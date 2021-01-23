@@ -66,6 +66,7 @@ class Mitsos():
 
 
         self.path = []
+        self.dists = [2]
         self.map = DynamicMap(self.START[0],self.START[1],map_unit=0.2)
         self.first_step = True
         self.misc = [0,0]
@@ -75,8 +76,8 @@ class Mitsos():
         self.stepCounter = 0
 
     def random_position(self):
-        x = random.random()*1.8 - 1
-        y = random.random()*1.8 - 1
+        x = (random.random()*2 - 1) * 0.95
+        y = (random.random()*2 - 1) * 0.95
         z = 0
         return [x,y,z]
 
@@ -84,12 +85,12 @@ class Mitsos():
         
         R_life_is_good = 1
         
-        R_reach_goal = int(dist_from_goal < prev_dist_from_goal) - int(not dist_from_goal < prev_dist_from_goal)
-        
         R_collision = - 20*collision
         
-        
-        return R_reach_goal*2
+        R_reach_goal = int(dist_from_goal < prev_dist_from_goal) - int(not dist_from_goal < prev_dist_from_goal)
+        if dist_from_goal < min(self.dists[:-1]):
+            R_reach_goal += 10 
+        return R_reach_goal
 
 
     def read_ir(self):
@@ -154,6 +155,7 @@ class Mitsos():
         
         self.stepCounter = 0
         self.path = []
+        self.dists = [2]
         self.map.path = []
         OF.reset()
         if (reset_position):
@@ -167,37 +169,40 @@ class Mitsos():
         action = self.discrete_actions[action_idx]
         stacked_frames = 4
         [xg,yg,_] = self.GOAL
-        x0,y0,z = self.get_robot_position()
-        was_visited = self.map.visit(x0,y0)
-        self.path.append((x0,y0))
+        x,y,z = self.get_robot_position()
+        was_visited = self.map.visit(x,y)
+        self.path.append((x,y))
 
         u1,u2 = action
         self.set_wheels_speed(u1,u2)
 
-        xp,yp = x0,y0
-        cam4 = np.zeros(shape=self.cam_shape+(4,))
-        sensors4 = np.zeros(shape=self.sensors_shape+(4,))
-        for i in range(stacked_frames):
-            [cam,sensors] = [self.read_camera(),self.read_ir()]
-            self.robot.step(self.timestep)
-            xn,yn,z = self.get_robot_position()
-
-            pos = [xp,yp,xn,yn,xg,yg]
-            xp,yp=xn,yn
-            sensors = np.array(list(sensors) + pos)
-
-            cam4[:,:,i] = cam
-            sensors4[:,i] = sensors
+        camera_stack = np.zeros(shape=self.cam_shape+(4,))
+        sensor_data = []
+        position_data = [xg,yg]
         
-        sensors4 = sensors4.reshape(-1)
-        state = [cam4, sensors4]
+        for i in range(stacked_frames):
+            
+            self.robot.step(self.timestep)
+            
+            cam = self.read_camera()
+            camera_stack[:,:,i] = cam
+            
+            sensors = self.read_ir()
+            sensor_data += list(sensors)
+            
+            x,y,z = self.get_robot_position()
+            position_data += [x,y]
 
-        xn,yn,z = self.get_robot_position()
+
+        #state = [camera_stack, sensor_data + position_data]
+        state = sensor_data + position_data
 
 
-        explore = self.map.spatial_std_reward()
+        # REWARD SIGNALS
+
         collision = self.collision()
-        dist_from_goal = D((xn,yn),(xg,yg))
+        dist_from_goal = D((x,y),(xg,yg))
+        self.dists.append(dist_from_goal)
         #r_optic_flow = OF.optical_flow(cam4[:,:,0],cam4[:,:,3],action)
 
         # forward speed: action[0]

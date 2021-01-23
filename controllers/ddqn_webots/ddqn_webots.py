@@ -40,9 +40,13 @@ state = env.reset()
 keyboard = Keyboard() # to control training from keyboard input
 keyboard.enable(env.timestep)
 
-agent = Agent(action_size=3, lr=0.00025, mem_size=15000, Network=MitsosDQNet, Memory=MemoryDouble, n_inputs=2)
+n_inputs = 1
+agent = Agent(action_size=3, lr=0.00025, mem_size=15000, epsilon_step=1/200000 ,Network=Net0, Memory=Memory, n_inputs=n_inputs)
 
-state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
+if n_inputs==2:
+    state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
+else:
+    state = tf.convert_to_tensor([state])
 agent.model(state)
 agent.target_model(state)
 
@@ -91,9 +95,13 @@ while (i<n_games):
         if k>60: action_idx = k-314
 
         observation_, reward, done, info = env.step(action_idx)
-
-        state = [np.expand_dims(observation[0],axis=0),np.expand_dims(observation[1],axis=0)]
-        new_state = [np.expand_dims(observation_[0],axis=0),np.expand_dims(observation_[1],axis=0)]
+        
+        if n_inputs == 2:
+            state = [np.expand_dims(observation[0],axis=0),np.expand_dims(observation[1],axis=0)]
+            new_state = [np.expand_dims(observation_[0],axis=0),np.expand_dims(observation_[1],axis=0)]
+        else:
+            state = np.expand_dims(observation,axis=0)
+            new_state = np.expand_dims(observation_,axis=0)
 
         agent.store_experience(state,action_idx,reward,new_state,done)
         observation = observation_
@@ -115,7 +123,7 @@ while (i<n_games):
     L.save_game()
     scores.append(score)
     
-    if agent.epsilon < 0.1:
+    if i%10==0:
         p = env.path
         p.append(env.GOAL)
         p = np.array(p)

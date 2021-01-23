@@ -12,6 +12,7 @@ import numpy as np
 import os
 from networks.networks import *
 from extras.experience_memory import *
+from extras.statistics import Logger
 import __main__
 
 class Agent(object):
@@ -104,8 +105,7 @@ if __name__ == '__main__':
     env = gym.make('CartPole-v0')
     agent = Agent(action_size=2)
 
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    L = Logger(dir=dir_path,fname='cartpole_ddqn')
+    L = Logger()
 
     n_games = 2000
     scores = []
