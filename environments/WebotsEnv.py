@@ -87,7 +87,7 @@ class Mitsos():
         
         R_collision = - 20*collision
         
-        R_reach_goal = int(dist_from_goal < prev_dist_from_goal) - int(not dist_from_goal < prev_dist_from_goal)
+        R_reach_goal = int(dist_from_goal < prev_dist_from_goal) - int(not dist_from_goal < prev_dist_from_goal)*5
         if dist_from_goal < min(self.dists[:-1]):
             R_reach_goal += 10 
         return R_reach_goal
