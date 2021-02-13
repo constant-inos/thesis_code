@@ -41,7 +41,7 @@ keyboard = Keyboard() # to control training from keyboard input
 keyboard.enable(env.timestep)
 
 n_inputs = 1
-agent = Agent(action_size=3, lr=0.00025, mem_size=15000, epsilon_step=1/200000 ,Network=Net0, Memory=Memory, n_inputs=n_inputs)
+agent = Agent(action_size=3, lr=0.001, mem_size=15000, epsilon_step=1/200000 ,Network=SimpleDQN, Memory=Memory, n_inputs=n_inputs, update_target_freq=30, train_interval=10)
 
 if n_inputs==2:
     state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
@@ -53,7 +53,7 @@ agent.target_model(state)
 agent.load_model()
 
 RESTORE_DAMAGE = 30
-n_games = 2000
+n_games = 5000
 training = True
 epsilon_train = agent.epsilon
 k = -1
@@ -69,14 +69,6 @@ i = 0
 
 if os.path.exists(filename):
     [agent.memory.memory,agent.memory.memCounter,agent.epsilon,env.task,i,scores,L.Variables,L.fname,L.time,L.t] = list(np.load(filename,allow_pickle=True))
-
-    # if i>200 and env.task=='Goal_Following':
-    #     env.task = 'Simple_Obstacle_Avoidance'
-    #     agent.epsilon = 0.5
-    # if i>500 and env.task=='Simple_Obstacle_Avoidance':
-    #     env.task = 'Random_Obstacle_Avoidance'
-    #     agent.epsilon = 0.5
-
 
 
 while (i<n_games):
@@ -108,7 +100,6 @@ while (i<n_games):
         if training: agent.learn()
         score += reward
         ep_steps += 1
-        L.add_log('reward',reward)
         L.tick()
         if k == 43:
             training = False
@@ -122,8 +113,9 @@ while (i<n_games):
     L.add_log('score',score)
     L.save_game()
     scores.append(score)
+
     
-    if i%10==0:
+    if i%1==0:
         p = env.path
         p.append(env.GOAL)
         p = np.array(p)
@@ -131,8 +123,6 @@ while (i<n_games):
         np.save(f,p)
         f.close()
 
-    
-    
     print('EPISODE:',i,'STEPS:',ep_steps,'EPSILON',agent.epsilon,'SCORE:',score,'AVG SCORE:',np.mean(scores),'\n')
     agent.save_model()
 
