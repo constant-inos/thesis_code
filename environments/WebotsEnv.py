@@ -28,7 +28,7 @@ def D(A,B):
 
 class Mitsos():
     # Webots-to-environment-agnostic
-    def __init__(self,max_steps=500):
+    def __init__(self,max_steps=100):
         self.name = "Mitsos"
         self.max_steps = max_steps
 
@@ -64,8 +64,8 @@ class Mitsos():
         self.GOAL = self.random_position()
         self.create_world()
 
-
-        self.path = []
+        (self.START[0],self.START[1])
+        self.path = [(self.START[0],self.START[1])]
         self.dists = [2]
         self.map = DynamicMap(self.START[0],self.START[1],map_unit=0.2)
         self.first_step = True
@@ -76,21 +76,11 @@ class Mitsos():
         self.stepCounter = 0
 
     def random_position(self):
-        x = (random.random()*2 - 1) * 0.95
-        y = (random.random()*2 - 1) * 0.95
+        x = (random.random()*2 - 1) * 0.95 * 0.33
+        y = (random.random()*2 - 1) * 0.95 * 0.33
         z = 0
         return [x,y,z]
 
-    def reward_function(self,dist_from_goal,prev_dist_from_goal,speed,collision):
-        
-        R_life_is_good = 1
-        
-        R_collision = - 20*collision
-        
-        R_reach_goal = int(dist_from_goal < prev_dist_from_goal) - int(not dist_from_goal < prev_dist_from_goal)*5
-        if dist_from_goal < min(self.dists[:-1]):
-            R_reach_goal += 10 
-        return R_reach_goal
 
 
     def read_ir(self):
@@ -154,8 +144,9 @@ class Mitsos():
         self.create_world()
         
         self.stepCounter = 0
-        self.path = []
+        self.path = [(self.START[0],self.START[1])]
         self.dists = [2]
+        self.min_dist_point = (self.START[0],self.START[1])
         self.map.path = []
         OF.reset()
         if (reset_position):
@@ -195,22 +186,38 @@ class Mitsos():
 
 
         #state = [camera_stack, sensor_data + position_data]
-        state = sensor_data + position_data
-
+        #state = sensor_data + position_data
+        state = position_data + list(self.min_dist_point) + sensor_data
 
         # REWARD SIGNALS
 
         collision = self.collision()
         dist_from_goal = D((x,y),(xg,yg))
-        self.dists.append(dist_from_goal)
         #r_optic_flow = OF.optical_flow(cam4[:,:,0],cam4[:,:,3],action)
 
-        # forward speed: action[0]
-        # previous distance from goal: self.misc[0]
-        reward = self.reward_function(dist_from_goal,self.misc[0],action[0],collision)
-        self.misc = [dist_from_goal,collision]
+        theta = self.rotation_to_goal((xg,yg),self.path[-1],(x,y))
+
+
+        theta = np.abs(theta/180)
+        if theta > 1: theta = 1
+
+        # REWARD FUNCTION #
+        R_collision = - 20*collision
         
-        done = collision or (self.stepCounter >= self.max_steps) or (dist_from_goal < 0.05)
+        R_direction = 6*np.tan(-theta+0.5)**3
+        R_reach_goal = int(dist_from_goal < self.misc[0]) - int(dist_from_goal > self.misc[0])
+
+        reward = R_reach_goal + R_direction + R_collision
+        ###################
+        
+        min_dist = min(self.dists)
+        argmin = np.argmin(self.dists)
+        if dist_from_goal < min_dist:
+            self.min_dist_point = self.path[argmin]
+        
+        self.dists.append(dist_from_goal)
+        self.misc = [dist_from_goal,collision]
+        done = collision or (self.stepCounter >= self.max_steps) or (dist_from_goal < 0.01)
         self.stepCounter += 1
         info = ''
         return state,reward,done,info 
@@ -219,6 +226,16 @@ class Mitsos():
     def render(self):
         return
 
+    def reward_function(self,dist_from_goal,prev_dist_from_goal,speed,collision):
+        
+        R_life_is_good = 1
+        
+        R_collision = - 20*collision
+        
+        R_reach_goal = int(dist_from_goal < prev_dist_from_goal) 
+        if dist_from_goal < 0.01:
+            R_reach_goal = 10
+        return R_reach_goal
 
 
     def create_world(self):
@@ -282,3 +299,23 @@ class Mitsos():
         scale = objects[object]*3
         proto = "Solid {  translation "+translation+"  scale "+scale+" children [    "+object+" {    }  ]}"
         return proto
+
+    def rotation_to_goal(self,G,X1,X2):
+        (xg,yg),(x1,y1),(x2,y2) = G,X1,X2
+        lambda1 = (yg-y1)/(xg-x1)
+        lambda2 = (y2-y1)/(x2-x1)
+        
+        if xg > x1:
+            theta1 = np.arctan(lambda1)
+        else:
+            theta1 = np.arctan(lambda1) + np.pi
+        
+        if x2 > x1:
+            theta2 = np.arctan(lambda2)
+        else:
+            theta2 = np.arctan(lambda2) + np.pi
+        
+        theta = np.rad2deg(theta1 - theta2)
+        if theta > 180: theta = theta - 180
+        
+        return theta
