@@ -4,7 +4,7 @@ from tensorflow.keras.layers import Dense,Conv2D,Flatten,Concatenate,MaxPooling2
 
 class PPONetwork(keras.Model):
     def __init__(self,n_actions,conv=False):
-        super(PPONetworkConv,self).__init__()
+        super(PPONetwork,self).__init__()
 
         self.HiddenLayers = []
 
@@ -15,7 +15,7 @@ class PPONetwork(keras.Model):
             self.HiddenLayers.append( Flatten() )
 
         self.HiddenLayers.append( Dense(256,activation='relu') )
-        self.HiddenLayers.append( Dense(256,activation='relu') )
+        self.HiddenLayers.append( Dense(512,activation='relu') )
         
         self.v = Dense(1,activation='linear')
         self.pi = Dense(n_actions,activation='softmax')
@@ -169,23 +169,7 @@ class MitsosDQNet(keras.Model):
         
         return v
 
-class SimpleNet(keras.Model):
-    def __init__(self,output_size,units=[64]):
-        super(SimpleNet, self).__init__()
 
-        self.Layers = []
-        for n in units:
-            self.Layers.append( Dense(units=n, activation='relu') )
-        self.Layers.append( Dense(units=output_size, activation='linear') )
-    
-    def call(self,state):
-        x = state
-
-        for layer in self.Layers:
-            x = layer(x)
-            
-        return x
-        
 ################################################################################################################################
 
 class DenseNet(keras.Model):
@@ -224,11 +208,11 @@ class ConvNet(keras.Model):
         return x
         
         
-class Net0(keras.Model):
+class SimpleDQN(keras.Model):
     def __init__(self,output_size):
-        super(Net0,self).__init__()
+        super(SimpleDQN,self).__init__()
         
-        self.main = DenseNet(units=[512,512])
+        self.main = DenseNet(units=[24,48])
         self.out = Dense(output_size,activation='linear')
         
     def call(self,INPUT):
@@ -237,7 +221,24 @@ class Net0(keras.Model):
         x = self.out(x)
         return x
         
-class Net2(keras.Model):
+class ConvDQN(keras.Model):
+    def __init__(self,output_size):
+        super(Net1,self).__init__()
+        
+        self.conv = ConvNet(filters=[64,64])
+        self.main = DenseNet(units=[128,128])
+        self.out = Dense(output_size,activation='linear')
+        
+    def call(self,INPUT):
+        x = INPUT
+
+        x = self.conv(x)
+        x = self.main(x)
+        x = self.out(x)
+        
+        return x
+        
+class ComplexDQN(keras.Model):
     def __init__(self,output_size):
         super(Net0,self).__init__()
         
@@ -259,3 +260,37 @@ class Net2(keras.Model):
         x = self.out(x)
         
         return x
+        
+        
+class SimplePGNet(keras.Model):
+    def __init__(self,n_actions):
+        super(SimplePGNet, self).__init__()
+        self.n_actions = n_actions
+
+        self.main = DenseNet(units=[24,48])
+        self.pi = Dense(n_actions,activation='softmax')
+
+    def call(self,state):
+        x = state
+        x = self.main(x)
+        pi = self.pi(x)
+
+        return pi
+
+class SimpleACNet(keras.Model):
+    def __init__(self, n_actions, name='actor_critic'):
+        super(SimpleACNet, self).__init__()
+        self.n_actions = n_actions
+        self.model_name = name
+
+        self.main = DenseNet([256,512])
+        self.v = Dense(1, activation='linear')
+        self.pi = Dense(n_actions,activation='softmax')
+
+    def call(self,state):
+        x = state
+        x = self.main(x)
+        pi = self.pi(x)
+        v = self.v(x)
+        
+        return v,pi
