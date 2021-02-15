@@ -64,13 +64,12 @@ class Mitsos():
         self.GOAL = self.random_position()
         self.create_world()
 
-        (self.START[0],self.START[1])
         self.path = [(self.START[0],self.START[1])]
         self.dists = [2]
         self.map = DynamicMap(self.START[0],self.START[1],map_unit=0.2)
+        
         self.first_step = True
         self.misc = [0,0]
-
         self.discrete_actions = [[0.5,-1],[1,0],[0.5,1]] # 3rd try
         self.action_size = len(self.discrete_actions)
         self.stepCounter = 0
@@ -142,7 +141,8 @@ class Mitsos():
         self.START = self.random_position()
         self.GOAL = self.random_position()
         self.create_world()
-        
+
+
         self.stepCounter = 0
         self.path = [(self.START[0],self.START[1])]
         self.dists = [2]
@@ -152,7 +152,13 @@ class Mitsos():
         if (reset_position):
             self.set_position(self.START[0],self.START[1],0.005)  
             self.set_rotation(3.14)
+            # test: place robot with back to target
+            theta = self.rotation_to_goal((self.GOAL[0],self.GOAL[1]),(self.START[0],self.START[1]-0.1),(self.START[0],self.START[1]))
+            self.set_rotation(np.deg2rad(theta))
+
         state,_,_,_ = self.step(1)
+        print(self.START)
+        print(self.GOAL)
         return state
 
 
@@ -207,7 +213,7 @@ class Mitsos():
         R_direction = 6*np.tan(-theta+0.5)**3
         R_reach_goal = int(dist_from_goal < self.misc[0]) - int(dist_from_goal > self.misc[0])
 
-        reward = R_reach_goal + R_direction + R_collision
+        reward = R_reach_goal 
         ###################
         
         min_dist = min(self.dists)
@@ -302,19 +308,27 @@ class Mitsos():
 
     def rotation_to_goal(self,G,X1,X2):
         (xg,yg),(x1,y1),(x2,y2) = G,X1,X2
-        lambda1 = (yg-y1)/(xg-x1)
-        lambda2 = (y2-y1)/(x2-x1)
         
-        if xg > x1:
-            theta1 = np.arctan(lambda1)
+        
+        if xg == x1:
+            theta1 = np.pi/2 + (yg<y1)*np.pi
         else:
-            theta1 = np.arctan(lambda1) + np.pi
+            lambda1 = (yg-y1)/(xg-x1)
+            if xg > x1:
+                theta1 = np.arctan(lambda1)
+            else:
+                theta1 = np.arctan(lambda1) + np.pi
         
-        if x2 > x1:
-            theta2 = np.arctan(lambda2)
-        else:
-            theta2 = np.arctan(lambda2) + np.pi
-        
+
+        if x2 == x1:
+            theta2 = np.pi/2 + (y2<y1)*np.pi
+        else: 
+            lambda2 = (y2-y1)/(x2-x1)
+            if x2 > x1:
+                theta2 = np.arctan(lambda2)
+            else:
+                theta2 = np.arctan(lambda2) + np.pi
+
         theta = np.rad2deg(theta1 - theta2)
         if theta > 180: theta = theta - 180
         
