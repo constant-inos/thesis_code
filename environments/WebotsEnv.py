@@ -111,6 +111,7 @@ class Mitsos():
         for _ in range(5): self.robot.step(self.timestep) # if not nan values in first iteration
     
     def set_rotation(self,a):
+        a += np.pi
         object = self.robot.getFromDef(self.name)
         rotationField = object.getField("rotation")  #object.getPosition()
         Field.setSFRotation(rotationField,[0,1,0,a])
@@ -140,8 +141,9 @@ class Mitsos():
         
         self.START = self.random_position()
         self.GOAL = self.random_position()
+        obs = self.robot.getFromDef('OBS')
+        obs.remove()
         self.create_world()
-
 
         self.stepCounter = 0
         self.path = [(self.START[0],self.START[1])]
@@ -151,14 +153,12 @@ class Mitsos():
         OF.reset()
         if (reset_position):
             self.set_position(self.START[0],self.START[1],0.005)  
-            self.set_rotation(3.14)
+            #self.set_rotation(3.14)
             # test: place robot with back to target
-            theta = self.rotation_to_goal((self.GOAL[0],self.GOAL[1]),(self.START[0],self.START[1]-0.1),(self.START[0],self.START[1]))
-            self.set_rotation(np.deg2rad(theta))
+            theta = self.rotation_to_goal((self.GOAL[0],self.GOAL[1]),(self.START[0]-0.1,self.START[1]),(self.START[0],self.START[1]))
+            self.set_rotation(theta+np.pi)
 
         state,_,_,_ = self.step(1)
-        print(self.START)
-        print(self.GOAL)
         return state
 
 
@@ -201,16 +201,14 @@ class Mitsos():
         dist_from_goal = D((x,y),(xg,yg))
         #r_optic_flow = OF.optical_flow(cam4[:,:,0],cam4[:,:,3],action)
 
-        theta = self.rotation_to_goal((xg,yg),self.path[-1],(x,y))
-
-
-        theta = np.abs(theta/180)
-        if theta > 1: theta = 1
+        #theta = self.rotation_to_goal((xg,yg),self.path[-1],(x,y))
+        # theta = np.abs(theta/180)
+        # if theta > 1: theta = 1
 
         # REWARD FUNCTION #
         R_collision = - 20*collision
         
-        R_direction = 6*np.tan(-theta+0.5)**3
+        #R_direction = 6*np.tan(-theta+0.5)**3
         R_reach_goal = int(dist_from_goal < self.misc[0]) - int(dist_from_goal > self.misc[0])
 
         reward = R_reach_goal 
@@ -232,22 +230,11 @@ class Mitsos():
     def render(self):
         return
 
-    def reward_function(self,dist_from_goal,prev_dist_from_goal,speed,collision):
-        
-        R_life_is_good = 1
-        
-        R_collision = - 20*collision
-        
-        R_reach_goal = int(dist_from_goal < prev_dist_from_goal) 
-        if dist_from_goal < 0.01:
-            R_reach_goal = 10
-        return R_reach_goal
-
 
     def create_world(self):
 
         self.set_obstacle_positions()
-
+        self.obstacles = [self.GOAL]
         p = self.obstacles
 
         for pos in p:
@@ -299,11 +286,11 @@ class Mitsos():
 
         if object=='SolidBox':
             translation = str(pos[1])+' '+str(pos[2]+0.05)+' '+str(pos[0])
-            return "SolidBox {  translation "+translation+"  size 0.1 0.1 0.1}"
+            return "DEF OBS SolidBox {  translation "+translation+"  size 0.1 0.1 0.1}"
             
         translation = str(pos[1])+' '+str(pos[2])+' '+str(pos[0])
         scale = objects[object]*3
-        proto = "Solid {  translation "+translation+"  scale "+scale+" children [    "+object+" {    }  ]}"
+        proto = "DEF OBS Solid {  translation "+translation+"  scale "+scale+" children [    "+object+" {    }  ]}"
         return proto
 
     def rotation_to_goal(self,G,X1,X2):
@@ -329,7 +316,6 @@ class Mitsos():
             else:
                 theta2 = np.arctan(lambda2) + np.pi
 
-        theta = np.rad2deg(theta1 - theta2)
-        if theta > 180: theta = theta - 180
+        theta = theta1 - theta2
         
         return theta
