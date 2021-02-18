@@ -201,17 +201,17 @@ class Mitsos():
         dist_from_goal = D((x,y),(xg,yg))
         #r_optic_flow = OF.optical_flow(cam4[:,:,0],cam4[:,:,3],action)
 
-        #theta = self.rotation_to_goal((xg,yg),self.path[-1],(x,y))
-        # theta = np.abs(theta/180)
-        # if theta > 1: theta = 1
+        theta = self.rotation_to_goal((xg,yg),self.path[-1],(x,y))
+        theta = np.abs((np.abs(theta)-np.pi)/np.pi)
+        if theta > 1: theta = 1
+        if theta < 0: theta = 0
 
         # REWARD FUNCTION #
         R_collision = - 20*collision
-        
-        #R_direction = 6*np.tan(-theta+0.5)**3
+        R_direction = 6*np.tan(-theta+0.5)**3
         R_reach_goal = int(dist_from_goal < self.misc[0]) - int(dist_from_goal > self.misc[0])
 
-        reward = R_reach_goal 
+        reward = R_direction 
         ###################
         
         min_dist = min(self.dists)
