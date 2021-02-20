@@ -28,7 +28,7 @@ def D(A,B):
 
 class Mitsos():
     # Webots-to-environment-agnostic
-    def __init__(self,max_steps=100):
+    def __init__(self,max_steps=200):
         self.name = "Mitsos"
         self.max_steps = max_steps
 
@@ -193,7 +193,7 @@ class Mitsos():
 
         #state = [camera_stack, sensor_data + position_data]
         #state = sensor_data + position_data
-        state = position_data + list(self.min_dist_point) + sensor_data
+        state = position_data #+ list(self.min_dist_point) + sensor_data
 
         # REWARD SIGNALS
 
@@ -201,17 +201,18 @@ class Mitsos():
         dist_from_goal = D((x,y),(xg,yg))
         #r_optic_flow = OF.optical_flow(cam4[:,:,0],cam4[:,:,3],action)
 
-        theta = self.rotation_to_goal((xg,yg),self.path[-1],(x,y))
-        theta = np.abs((np.abs(theta)-np.pi)/np.pi)
-        if theta > 1: theta = 1
-        if theta < 0: theta = 0
+        theta0 = self.rotation_to_goal((xg,yg),self.path[-1],(x,y))
+        theta = 1-np.abs((np.abs(theta0)-np.pi)/np.pi)
+
+        if theta > 1 or theta < 0: print('THETA WARNING')
 
         # REWARD FUNCTION #
         R_collision = - 20*collision
         R_direction = 6*np.tan(-theta+0.5)**3
         R_reach_goal = int(dist_from_goal < self.misc[0]) - int(dist_from_goal > self.misc[0])
 
-        reward = R_direction 
+        reward = R_direction + 0.5*int(theta<self.misc[0]) - 0.5*int(theta>self.misc[0])
+        
         ###################
         
         min_dist = min(self.dists)
@@ -220,7 +221,7 @@ class Mitsos():
             self.min_dist_point = self.path[argmin]
         
         self.dists.append(dist_from_goal)
-        self.misc = [dist_from_goal,collision]
+        self.misc = [theta,collision]
         done = collision or (self.stepCounter >= self.max_steps) or (dist_from_goal < 0.01)
         self.stepCounter += 1
         info = ''
