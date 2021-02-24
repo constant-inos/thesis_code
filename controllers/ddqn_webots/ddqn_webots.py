@@ -41,7 +41,7 @@ keyboard = Keyboard() # to control training from keyboard input
 keyboard.enable(env.timestep)
 
 n_inputs = 1
-agent = Agent(action_size=3, lr=0.001, mem_size=15000, epsilon_step=1/50000 ,Network=SimpleDQN, Memory=Memory, n_inputs=n_inputs, update_target_freq=30, train_interval=10)
+agent = Agent(action_size=3, lr=0.005, mem_size=15000, epsilon_step=1/50000 ,Network=SimpleDQN, Memory=Memory, n_inputs=n_inputs, update_target_freq=30, train_interval=10, batch_size=64)
 
 if n_inputs==2:
     state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
@@ -57,7 +57,7 @@ n_games = 5000
 training = True
 epsilon_train = agent.epsilon
 k = -1
-filename = 'checkpoint'
+filename = os.path.join(parent_dir,'history','checkpoint')
 
 
 
@@ -69,6 +69,7 @@ i = 0
 
 if os.path.exists(filename):
     [agent.memory.memory,agent.memory.memCounter,agent.epsilon,env.task,i,scores,L.Variables,L.fname,L.time,L.t] = list(np.load(filename,allow_pickle=True))
+    env.total_steps = agent.memory.memCounter
 
 
 while (i<n_games):
@@ -131,7 +132,7 @@ while (i<n_games):
     if i % RESTORE_DAMAGE == 0:
         keep_variables = [agent.memory.memory,agent.memory.memCounter,agent.epsilon,env.task,i,scores,L.Variables,L.fname,L.time,L.t]
         keep_variables = np.array(keep_variables,dtype=object)
-        f = open('checkpoint','wb')
+        f = open(filename,'wb')
         np.save(f,keep_variables)
         f.close()
         
