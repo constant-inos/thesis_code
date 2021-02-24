@@ -28,7 +28,7 @@ def D(A,B):
 
 class Mitsos():
     # Webots-to-environment-agnostic
-    def __init__(self,max_steps=200):
+    def __init__(self,max_steps=2000):
         self.name = "Mitsos"
         self.max_steps = max_steps
 
@@ -73,6 +73,7 @@ class Mitsos():
         self.discrete_actions = [[0.5,-1],[1,0],[0.5,1]] # 3rd try
         self.action_size = len(self.discrete_actions)
         self.stepCounter = 0
+        self.total_steps = 0
 
     def random_position(self):
         x = (random.random()*2 - 1) * 0.95 * 0.33
@@ -139,10 +140,12 @@ class Mitsos():
 
     def reset(self,reset_position=True):
         
-        self.START = self.random_position()
-        self.GOAL = self.random_position()
-        obs = self.robot.getFromDef('OBS')
-        obs.remove()
+        # self.START = self.random_position()
+        # self.GOAL = self.random_position()
+        self.START = (-0.1,-0.1,0)
+        self.GOAL = (0.2,0.25,0)
+        # obs = self.robot.getFromDef('OBS')
+        # obs.remove()
         self.create_world()
 
         self.stepCounter = 0
@@ -151,13 +154,16 @@ class Mitsos():
         self.min_dist_point = (self.START[0],self.START[1])
         self.map.path = []
         OF.reset()
+
         if (reset_position):
             self.set_position(self.START[0],self.START[1],0.005)  
             #self.set_rotation(3.14)
             # test: place robot with back to target
             theta = self.rotation_to_goal((self.GOAL[0],self.GOAL[1]),(self.START[0]-0.1,self.START[1]),(self.START[0],self.START[1]))
-            self.set_rotation(theta+np.pi)
-
+            if self.total_steps < 50000: self.set_rotation(theta+np.pi)
+            else: self.set_rotation(random.random()*3.14*2-3.14)
+        
+        self.misplays = 0
         state,_,_,_ = self.step(1)
         return state
 
@@ -175,7 +181,7 @@ class Mitsos():
 
         camera_stack = np.zeros(shape=self.cam_shape+(4,))
         sensor_data = []
-        position_data = [xg,yg]
+        position_data = [xg,yg,x,y]
         
         for i in range(stacked_frames):
             
@@ -188,7 +194,7 @@ class Mitsos():
             sensor_data += list(sensors)
             
             x,y,z = self.get_robot_position()
-            position_data += [x,y]
+        position_data += [x,y]
 
 
         #state = [camera_stack, sensor_data + position_data]
@@ -203,16 +209,23 @@ class Mitsos():
 
         theta0 = self.rotation_to_goal((xg,yg),self.path[-1],(x,y))
         theta = 1-np.abs((np.abs(theta0)-np.pi)/np.pi)
-
         if theta > 1 or theta < 0: print('THETA WARNING')
 
         # REWARD FUNCTION #
         R_collision = - 20*collision
-        R_direction = 6*np.tan(-theta+0.5)**3
-        R_reach_goal = int(dist_from_goal < self.misc[0]) - int(dist_from_goal > self.misc[0])
-
-        reward = R_direction + 0.5*int(theta<self.misc[0]) - 0.5*int(theta>self.misc[0])
+        R_direction = 6*np.tan(-theta+0.5)**4
+        R_distance = int(dist_from_goal < self.misc[1]) - 5*int(dist_from_goal > self.misc[1])
         
+        reward =  1 #+ int(theta<0.5)*R_direction*5
+        
+        misplay = theta > 0.2 and theta > self.misc[0] 
+        
+        
+        if misplay:
+            self.misplays += 1
+            reward = 0
+        
+
         ###################
         
         min_dist = min(self.dists)
@@ -221,8 +234,8 @@ class Mitsos():
             self.min_dist_point = self.path[argmin]
         
         self.dists.append(dist_from_goal)
-        self.misc = [theta,collision]
-        done = collision or (self.stepCounter >= self.max_steps) or (dist_from_goal < 0.01)
+        self.misc = [theta,dist_from_goal]
+        done = collision or (self.stepCounter >= self.max_steps) or (dist_from_goal < 0.01) or (self.misplays > 10)
         self.stepCounter += 1
         info = ''
         return state,reward,done,info 
@@ -235,7 +248,6 @@ class Mitsos():
     def create_world(self):
 
         self.set_obstacle_positions()
-        self.obstacles = [self.GOAL]
         p = self.obstacles
 
         for pos in p:
