@@ -28,7 +28,7 @@ def D(A,B):
 
 class Mitsos():
     # Webots-to-environment-agnostic
-    def __init__(self,max_steps=2000):
+    def __init__(self,max_steps=200):
         self.name = "Mitsos"
         self.max_steps = max_steps
 
@@ -75,13 +75,132 @@ class Mitsos():
         self.stepCounter = 0
         self.total_steps = 0
 
-    def random_position(self):
-        x = (random.random()*2 - 1) * 0.95 * 0.33
-        y = (random.random()*2 - 1) * 0.95 * 0.33
-        z = 0
-        return [x,y,z]
+    def reset(self,reset_position=True):
+        
+        self.create_world()
+
+        self.stepCounter = 0
+        self.path = [(self.START[0],self.START[1])]
+        self.map.path = []
+        #OF.reset()
+
+        self.set_position(self.START[0],self.START[1],0.005)  
+        theta = self.rotation_to_goal((self.GOAL[0],self.GOAL[1]),(self.START[0]-0.1,self.START[1]),(self.START[0],self.START[1]))
+        #self.set_rotation(theta+np.pi)
+        self.set_rotation(random.random()*2*3.14)
+
+        self.misplays = 0
+        state,_,_,_ = self.step(1)
+        return state
 
 
+    def step(self,action_idx):
+        action = self.discrete_actions[action_idx]
+        [xg,yg,_] = self.GOAL
+        x,y,z = self.get_robot_position()
+        was_visited = self.map.visit(x,y)
+        self.path.append((x,y))
+
+        u1,u2 = action
+        self.set_wheels_speed(u1,u2)
+
+        camera_stack = np.zeros(shape=self.cam_shape+(4,))
+        sensor_data = []
+        position_data = [xg,yg,x,y]
+        
+        for i in range(4):
+            self.robot.step(self.timestep)
+            
+            cam = self.read_camera()
+            camera_stack[:,:,i] = cam
+            
+            sensors = self.read_ir()
+            sensor_data += list(sensors)
+            
+            x,y,z = self.get_robot_position()
+        
+            position_data += [x,y]
+
+
+        #state = [camera_stack, sensor_data + position_data]
+        #state = sensor_data + position_data
+        state = position_data 
+
+        # REWARD SIGNALS
+
+        collision = self.collision()
+        dist_from_goal = D((x,y),(xg,yg))
+        #r_optic_flow = OF.optical_flow(cam4[:,:,0],cam4[:,:,3],action)
+
+        theta0 = self.rotation_to_goal((xg,yg),self.path[-1],(x,y))
+        theta = 1-np.abs((np.abs(theta0)-np.pi)/np.pi)
+        dtheta = self.misc[0] - theta
+
+        closer = int(dist_from_goal < self.misc[1])
+        further = int(dist_from_goal > self.misc[1])
+        good_turn = int(theta-self.misc[0]>0.01)
+        bad_turn = int(theta-self.misc[0]<-0.01)
+        
+        R1 = 30*(0.5-theta)**3 
+        R2 = 2*(1/(dist_from_goal+1/2)-2)
+        R3 =  2*(0.5-theta) +2*int(dtheta>0.01) + 0.2*int(dtheta>0) - 2*int(dtheta<0.01) - 0.2*int(dtheta<0)
+        
+        #reward =  R1 + int(theta-self.misc[0]>0.01)
+        reward = 1
+        
+        misplay1 = theta > 0.15 and theta > self.misc[0] 
+        misplay2 = dist_from_goal > self.misc[1]
+        misplay = misplay2
+        self.max_steps = 2000
+        
+        if misplay:
+            self.misplays += 1
+            reward = reward * int(self.misplays > 10)
+        else:
+            if self.misplays > 0:
+                self.misplays -= 0
+                
+        if collision: reward += -50
+        if dist_from_goal < 0.01: reward += 50
+        
+        self.misc = [theta,dist_from_goal]
+        done = collision or (self.stepCounter >= self.max_steps) or (dist_from_goal < 0.01) or (self.misplays > 10)
+        self.stepCounter += 1
+        info = ''
+        return state,reward,done,info 
+
+
+
+
+    def create_world(self):
+        
+        self.START = self.random_position()
+        self.GOAL = self.random_position()
+        # obs = self.robot.getFromDef('OBS')
+        # obs.remove()
+        
+        self.set_obstacle_positions()
+        p = self.obstacles
+
+        for pos in p:
+            nodeString = self.get_object_proto(pos=pos)
+
+            root = self.robot.getRoot()
+            node = root.getField('children')
+            node.importMFNodeFromString(-1,nodeString)
+
+    def set_obstacle_positions(self):
+        
+        n = 0
+        self.obstacles = []
+        
+        while len(self.obstacles) < n:
+            [x,y,z] = self.random_position()
+            if D(self.START,(x,y,z)) > 0.1 and D(self.GOAL,(x,y,z)) > 0.1:
+                self.obstacles.append([x,y,z])
+
+    def render(self):
+        return
 
     def read_ir(self):
         ir_sensors = np.array([ i.getValue() for i in self.InfraredSensors])
@@ -131,181 +250,7 @@ class Mitsos():
         object = self.robot.getFromDef(self.name)
         y,z,x = object.getPosition()
         return [x,y,z]
-    
-    def wait(self,timesteps):
-        for _ in range(timesteps):
-            self.robot.step(self.timestep)
-        return 
-
-
-    def reset(self,reset_position=True):
         
-        # self.START = self.random_position()
-        # self.GOAL = self.random_position()
-        self.START = (-0.1,-0.1,0)
-        self.GOAL = (0.2,0.25,0)
-        # obs = self.robot.getFromDef('OBS')
-        # obs.remove()
-        self.create_world()
-
-        self.stepCounter = 0
-        self.path = [(self.START[0],self.START[1])]
-        self.dists = [2]
-        self.min_dist_point = (self.START[0],self.START[1])
-        self.map.path = []
-        OF.reset()
-
-        if (reset_position):
-            self.set_position(self.START[0],self.START[1],0.005)  
-            #self.set_rotation(3.14)
-            # test: place robot with back to target
-            theta = self.rotation_to_goal((self.GOAL[0],self.GOAL[1]),(self.START[0]-0.1,self.START[1]),(self.START[0],self.START[1]))
-            if self.total_steps < 50000: self.set_rotation(theta+np.pi)
-            else: self.set_rotation(random.random()*3.14*2-3.14)
-        
-        self.misplays = 0
-        state,_,_,_ = self.step(1)
-        return state
-
-
-    def step(self,action_idx):
-        action = self.discrete_actions[action_idx]
-        stacked_frames = 4
-        [xg,yg,_] = self.GOAL
-        x,y,z = self.get_robot_position()
-        was_visited = self.map.visit(x,y)
-        self.path.append((x,y))
-
-        u1,u2 = action
-        self.set_wheels_speed(u1,u2)
-
-        camera_stack = np.zeros(shape=self.cam_shape+(4,))
-        sensor_data = []
-        position_data = [xg,yg,x,y]
-        
-        for i in range(stacked_frames):
-            
-            self.robot.step(self.timestep)
-            
-            cam = self.read_camera()
-            camera_stack[:,:,i] = cam
-            
-            sensors = self.read_ir()
-            sensor_data += list(sensors)
-            
-            x,y,z = self.get_robot_position()
-        position_data += [x,y]
-
-
-        #state = [camera_stack, sensor_data + position_data]
-        #state = sensor_data + position_data
-        state = position_data #+ list(self.min_dist_point) + sensor_data
-
-        # REWARD SIGNALS
-
-        collision = self.collision()
-        dist_from_goal = D((x,y),(xg,yg))
-        #r_optic_flow = OF.optical_flow(cam4[:,:,0],cam4[:,:,3],action)
-
-        theta0 = self.rotation_to_goal((xg,yg),self.path[-1],(x,y))
-        theta = 1-np.abs((np.abs(theta0)-np.pi)/np.pi)
-        if theta > 1 or theta < 0: print('THETA WARNING')
-
-        # REWARD FUNCTION #
-        R_collision = - 20*collision
-        R_direction = 6*np.tan(-theta+0.5)**4
-        R_distance = int(dist_from_goal < self.misc[1]) - 5*int(dist_from_goal > self.misc[1])
-        
-        reward =  1 #+ int(theta<0.5)*R_direction*5
-        
-        misplay = theta > 0.2 and theta > self.misc[0] 
-        
-        
-        if misplay:
-            self.misplays += 1
-            reward = 0
-        
-
-        ###################
-        
-        min_dist = min(self.dists)
-        argmin = np.argmin(self.dists)
-        if dist_from_goal < min_dist:
-            self.min_dist_point = self.path[argmin]
-        
-        self.dists.append(dist_from_goal)
-        self.misc = [theta,dist_from_goal]
-        done = collision or (self.stepCounter >= self.max_steps) or (dist_from_goal < 0.01) or (self.misplays > 10)
-        self.stepCounter += 1
-        info = ''
-        return state,reward,done,info 
-
-
-    def render(self):
-        return
-
-
-    def create_world(self):
-
-        self.set_obstacle_positions()
-        p = self.obstacles
-
-        for pos in p:
-            nodeString = self.get_object_proto(pos=pos)
-
-            root = self.robot.getRoot()
-            node = root.getField('children')
-            node.importMFNodeFromString(-1,nodeString)
-
-    def set_obstacle_positions(self):
-
-        self.obstacles = []
-
-        if self.task == 'Simple_Obstacle_Avoidance':
-            Ox = (self.GOAL[0] + self.START[0]) / 2
-            Oy = (self.GOAL[1] + self.START[1]) / 2
-            Oz = 0
-            self.obstacles.append([Ox,Oy,Oz])
-
-        if self.task == 'Random_Obstacle_Avoidance':
-
-            n = int(D(self.START,self.GOAL) // 0.1 // 2)
-            n = 3
-
-            x_max = max(self.START[0],self.GOAL[0])
-            x_min = min(self.START[0],self.GOAL[0])
-            y_max = max(self.START[1],self.GOAL[1])
-            y_min = min(self.START[1],self.GOAL[1])
-
-            for _ in range(n):
-                Ox = random.random()*(x_max - x_min) + x_min
-                Oy = random.random()*(y_max - y_min) + y_min
-                Oz = 0
-
-                self.obstacles.append([Ox,Oy,Oz])
-
-
-    def get_object_proto(self,object='',pos=[0,0,0]):
-        # needs change
-        objects = {'Chair':'0.2 ',
-           'Ball':'1.6 ',
-           'ComputerMouse':'1.4 ',
-           'OilBarrel':'0.17 ',
-           'Toilet':'0.13 ',
-           'SolidBox':''}
-
-        if object=='':
-            object = np.random.choice(list(objects.keys()))
-
-        if object=='SolidBox':
-            translation = str(pos[1])+' '+str(pos[2]+0.05)+' '+str(pos[0])
-            return "DEF OBS SolidBox {  translation "+translation+"  size 0.1 0.1 0.1}"
-            
-        translation = str(pos[1])+' '+str(pos[2])+' '+str(pos[0])
-        scale = objects[object]*3
-        proto = "DEF OBS Solid {  translation "+translation+"  scale "+scale+" children [    "+object+" {    }  ]}"
-        return proto
-
     def rotation_to_goal(self,G,X1,X2):
         (xg,yg),(x1,y1),(x2,y2) = G,X1,X2
         
@@ -332,3 +277,39 @@ class Mitsos():
         theta = theta1 - theta2
         
         return theta
+        
+    
+    def wait(self,timesteps):
+        for _ in range(timesteps):
+            self.robot.step(self.timestep)
+        return 
+
+    def random_position(self):
+        x = (random.random()*2 - 1) * 0.95 * 0.33
+        y = (random.random()*2 - 1) * 0.95 * 0.33
+        z = 0
+        return [x,y,z]
+
+    
+
+    def get_object_proto(self,object='',pos=[0,0,0]):
+        # needs change
+        objects = {'Chair':'0.2 ',
+           'Ball':'1.6 ',
+           'ComputerMouse':'1.4 ',
+           'OilBarrel':'0.17 ',
+           'Toilet':'0.13 ',
+           'SolidBox':''}
+
+        if object=='':
+            object = np.random.choice(list(objects.keys()))
+
+        if object=='SolidBox':
+            translation = str(pos[1])+' '+str(pos[2]+0.05)+' '+str(pos[0])
+            return "DEF OBS SolidBox {  translation "+translation+"  size 0.1 0.1 0.1}"
+            
+        translation = str(pos[1])+' '+str(pos[2])+' '+str(pos[0])
+        scale = objects[object]*3
+        proto = "DEF OBS Solid {  translation "+translation+"  scale "+scale+" children [    "+object+" {    }  ]}"
+        return proto
+
