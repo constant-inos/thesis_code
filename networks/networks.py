@@ -212,7 +212,7 @@ class SimpleDQN(keras.Model):
     def __init__(self,output_size):
         super(SimpleDQN,self).__init__()
         
-        self.main = DenseNet(units=[24,48])
+        self.main = DenseNet(units=[128,128,128])
         self.out = Dense(output_size,activation='linear')
         
     def call(self,INPUT):
