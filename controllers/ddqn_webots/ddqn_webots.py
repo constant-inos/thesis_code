@@ -41,7 +41,7 @@ keyboard = Keyboard() # to control training from keyboard input
 keyboard.enable(env.timestep)
 
 n_inputs = 1
-agent = Agent(action_size=3, lr=0.005, mem_size=15000, epsilon_step=1/50000 ,Network=SimpleDQN, Memory=Memory, n_inputs=n_inputs, update_target_freq=30, train_interval=10, batch_size=64)
+agent = Agent(action_size=env.action_size, lr=0.001, mem_size=50000, epsilon_step=1/1000000 ,Network=SimpleDQN, Memory=Memory, n_inputs=n_inputs, update_target_freq=30, train_interval=10, batch_size=32)
 
 if n_inputs==2:
     state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
@@ -53,7 +53,7 @@ agent.target_model(state)
 agent.load_model()
 
 RESTORE_DAMAGE = 30
-n_games = 5000
+n_games = 500000
 training = True
 epsilon_train = agent.epsilon
 k = -1
@@ -111,6 +111,15 @@ while (i<n_games):
             training = True
             agent.epsilon = epsilon_train
             print('Training on')
+            
+    her_memory = env.her.in_done()
+    for m in her_memory:
+        state,action_idx,reward,new_state,done = m
+        state = np.expand_dims(state,axis=0)
+        new_state = np.expand_dims(new_state,axis=0)
+        agent.store_experience(state,action_idx,reward,new_state,done)
+        
+    
     L.add_log('score',score)
     L.save_game()
     scores.append(score)
