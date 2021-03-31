@@ -12,7 +12,6 @@ from extras import obstacles
 import numpy as np
 import random
 import cv2
-#from IPython.display import clear_output 
 
 OF = OpticalFlow()
 
@@ -24,6 +23,27 @@ def D(A,B):
         (x,y) = A
         (a,b) = B
     return np.sqrt((x-a)**2 + (y-b)**2)
+
+def reward_function(position_data,prev_shaping,collision=False):
+    X,Y,X1,Y1 = position_data
+    
+    reward = 0
+    sh1 = -100*(X1**2+Y1**2) 
+    shaping = sh1
+    if prev_shaping is not None:
+        reward = shaping - prev_shaping
+    
+    done = False
+    if collision:
+        #reward -= 100
+        done = True
+    
+    c=1
+    if np.sqrt(X1**2+Y1**2) < c/100:
+        reward = 1000
+        done = True
+        
+    return reward,done,shaping
 
 class HER():
     def __init__(self):
@@ -55,16 +75,11 @@ class HER():
         xg,yg = self.states[n-1][2],self.states[n-1][3]
         for i in range(n):
             [x,y,x1,y1] = self.states[i]
-            state = [x-xg,y-yg,x1-xg,y1-yg]
+            position_data = [x-xg,y-yg,x1-xg,y1-yg]
+            state = position_data
             
-            reward = 0
-            shaping = -100*((x1-xg)**2+(y1-yg)**2)
-            if prev_shaping is not None:
-                reward = shaping - prev_shaping
-            prev_shaping = shaping
-        
-            reward -= 1 # as fast as possible?
-            
+            reward,done,prev_shaping = reward_function(position_data,prev_shaping)
+
             done = (i==n-1)
             action = self.actions[i]
             
@@ -75,14 +90,11 @@ class HER():
             prev_state,prev_action,prev_reward,prev_done = state,action,reward,done
         
         return memory
-
-
-
-
-
+            
+        
 class Mitsos():
     # Webots-to-environment-agnostic
-    def __init__(self,max_steps=40):
+    def __init__(self,max_steps=200):
         self.name = "Mitsos"
         self.max_steps = max_steps
 
@@ -124,7 +136,6 @@ class Mitsos():
         self.create_world()
         self.her = HER()
 
-
     def reset(self,reset_position=True):
         
         self.create_world()
@@ -159,13 +170,11 @@ class Mitsos():
         
         for i in range(self.substeps):
             self.robot.step(self.timestep)
-            
             if (self.substeps-i)%(self.substeps//4)==0: # we need only 4 samples per step, substeps irrelevant
                 # cam = self.read_camera()
                 # camera_stack[:,:,i] = cam
                 # sensors = self.read_ir()
                 # sensor_data += list(sensors)
-                
                 x1,y1,z1 = self.get_robot_position()
 
         c = 10
@@ -177,30 +186,12 @@ class Mitsos():
         #state = sensor_data + position_data
         state = position_data 
 
-        # REWARD 
+        # REWARD
+        reward,done,self.shaping = reward_function(position_data,self.shaping)
 
-        reward = 0
-        shaping = -100*((x1-xg)**2+(y1-yg)**2) \
-                  -100*self.rotation_to_goal((xg,yg),(x,y),(x1,y1))
-        if self.shaping is not None:
-            reward = shaping - self.shaping
-        self.shaping = shaping
-        
-        reward -= 1 # as fast as possible?
-        
-        done = False
-        if self.collision():
-            #reward -= 100
-            done = True
-            
-        if np.sqrt((x1-xg)**2+(y1-yg)**2) < c/100:
-            reward = 100
-            done = True
-            
         if self.stepCounter >= self.max_steps:
             done = True
-        
-        self.her.add([x,y,x1,y1],action_idx)
+
 
         if done:
             filename = os.path.join(parent_dir,'history','episode')
@@ -209,23 +200,22 @@ class Mitsos():
             f = open(filename,'wb')
             np.save(f,vars)
             f.close()
-
+        
+        
+        self.her.add([x,y,x1,y1],action_idx)
 
         self.stepCounter += 1
         info = ''
         return state,reward,done,info 
-
+        
 
     def create_world(self):
         
         self.GOAL =  [0,0,0]   #self.random_position()
-        self.START = [0.4,0.4,0]   #self.random_position()
-        if random.random()>0.5: self.START = [-0.4,-0.4,0]
-        while(True):
-            obs = self.robot.getFromDef('OBS')
-            if obs is None: break
-            obs.remove()
-
+        self.START = [0.2,0.2,0]   #self.random_position()
+        if random.random()>0.5: self.START = [-0.2,-0.2,0]
+        # obs = self.robot.getFromDef('OBS')
+        # obs.remove()
         
         self.set_obstacle_positions()
         p = self.obstacles
@@ -239,12 +229,12 @@ class Mitsos():
 
     def set_obstacle_positions(self):
         
-        n = 5
+        n = 0
         self.obstacles = []
         
         while len(self.obstacles) < n:
             [x,y,z] = self.random_position()
-            if D(self.START,(x,y,z)) > 0.4 and D(self.GOAL,(x,y,z)) > 0.1 and D(self.START,(x,y,z)) < 0.5:
+            if D(self.START,(x,y,z)) > 0.1 and D(self.GOAL,(x,y,z)) > 0.1:
                 self.obstacles.append([x,y,z])
 
     def render(self):
@@ -283,7 +273,7 @@ class Mitsos():
         object = self.robot.getFromDef(self.name)
         rotationField = object.getField("rotation")  #object.getPosition()
         Field.setSFRotation(rotationField,[0,1,0,a])
-        self.robot.step(self.timestep) # if not, nan values in first iteration
+        self.robot.step(self.timestep) # if not nan values in first iteration
 
     def set_wheels_speed(self,u,w):
         # u: velocity
