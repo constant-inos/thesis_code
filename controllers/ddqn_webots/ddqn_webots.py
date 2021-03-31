@@ -41,7 +41,7 @@ keyboard = Keyboard() # to control training from keyboard input
 keyboard.enable(env.timestep)
 
 n_inputs = 1
-agent = Agent(action_size=env.action_size, lr=0.001, mem_size=15000, epsilon_step=1/1000000 ,Network=SimpleDQN, Memory=Memory, n_inputs=n_inputs, update_target_freq=30, train_interval=10, batch_size=32)
+agent = Agent(action_size=env.action_size, lr=0.001, mem_size=50000, epsilon_step=1/1500000 ,Network=SimpleDQN, Memory=Memory, n_inputs=n_inputs, update_target_freq=30, train_interval=10, batch_size=32)
 
 if n_inputs==2:
     state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
@@ -59,13 +59,8 @@ epsilon_train = agent.epsilon
 k = -1
 filename = os.path.join(parent_dir,'history','checkpoint')
 
-
-
 scores = deque(maxlen=100)
 i = 0
-
-
-
 
 if os.path.exists(filename):
     [agent.memory.memory,agent.memory.memCounter,agent.epsilon,env.task,i,scores,L.Variables,L.fname,L.time,L.t] = list(np.load(filename,allow_pickle=True))
@@ -76,7 +71,6 @@ while (i<n_games):
     done = False
     score = 0
     observation = env.reset()
-    t = time.time()
     ep_steps = 0
     current_time = datetime.now().strftime("%H:%M:%S")
     print('GAME:',i,' - TASK:',env.task,' - CURRENT TIME:',current_time)
@@ -124,7 +118,7 @@ while (i<n_games):
     L.save_game()
     scores.append(score)
 
-    
+
     print('EPISODE:',i,'STEPS:',ep_steps,'EPSILON',agent.epsilon,'SCORE:',score,'AVG SCORE:',np.mean(scores),'\n')
     agent.save_model()
 
