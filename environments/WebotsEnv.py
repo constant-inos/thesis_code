@@ -42,6 +42,7 @@ def reward_function(position_data,prev_shaping,collision=False):
     if np.sqrt(X1**2+Y1**2) < c/100:
         reward = 1000
         done = True
+        print('OK')
         
     return reward,done,shaping
 
@@ -210,10 +211,21 @@ class Mitsos():
         
 
     def create_world(self):
+        mode = 0
         
-        self.GOAL =  [0,0,0]   #self.random_position()
-        self.START = [0.2,0.2,0]   #self.random_position()
-        if random.random()>0.5: self.START = [-0.2,-0.2,0]
+        if mode == 0:
+            self.GOAL =  [0,0,0]   #self.random_position()
+            self.START = [0.2,0.2,0]   #self.random_position()
+            #if random.random()>0.5: self.START = [-0.2,-0.2,0]
+        
+        if mode == 1:
+            self.GOAL =  [0,0,0]   #self.random_position()
+            while(True):
+                self.START = self.random_position()
+                d = D(self.START,self.GOAL) 
+                if d>0.18 and d<0.22:
+                    break
+    
         # obs = self.robot.getFromDef('OBS')
         # obs.remove()
         
