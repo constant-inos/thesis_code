@@ -41,7 +41,7 @@ keyboard = Keyboard() # to control training from keyboard input
 keyboard.enable(env.timestep)
 
 n_inputs = 1
-agent = Agent(action_size=env.action_size, lr=0.001, mem_size=50000, epsilon_step=1/1500000 ,Network=SimpleDQN, Memory=Memory, n_inputs=n_inputs, update_target_freq=30, train_interval=10, batch_size=32)
+agent = Agent(action_size=env.action_size, lr=0.001, mem_size=50000, epsilon_step=1/100000 ,Network=SimpleDQN, Memory=Memory, n_inputs=n_inputs, update_target_freq=30, train_interval=10, batch_size=32)
 
 if n_inputs==2:
     state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
@@ -66,7 +66,7 @@ if os.path.exists(filename):
     [agent.memory.memory,agent.memory.memCounter,agent.epsilon,env.task,i,scores,L.Variables,L.fname,L.time,L.t] = list(np.load(filename,allow_pickle=True))
     env.total_steps = agent.memory.memCounter
 
-while (i<n_games):
+while (True):
 
     done = False
     score = 0
@@ -132,3 +132,8 @@ while (i<n_games):
         f.close()
         
         env.robot.worldReload()
+        
+    if agent.epsilon <= agent.epsilon_min:
+        break
+
+print('End of Training!')

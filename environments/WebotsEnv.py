@@ -15,6 +15,16 @@ import cv2
 
 OF = OpticalFlow()
 
+def cart2pol(x, y):
+    rho = np.sqrt(x**2 + y**2)
+    phi = np.arctan2(y, x)
+    return(rho, phi)
+
+def pol2cart(rho, phi):
+    x = rho * np.cos(phi)
+    y = rho * np.sin(phi)
+    return(x, y)
+
 def D(A,B):
     if len(A) == 3:
         (x,y,z) = A
@@ -38,12 +48,11 @@ def reward_function(position_data,prev_shaping,collision=False):
         #reward -= 100
         done = True
     
-    c=1
+    c=5
     if np.sqrt(X1**2+Y1**2) < c/100:
-        reward = 1000
+        reward = 100
         done = True
-        print('OK')
-        
+
     return reward,done,shaping
 
 class HER():
@@ -77,7 +86,11 @@ class HER():
         for i in range(n):
             [x,y,x1,y1] = self.states[i]
             position_data = [x-xg,y-yg,x1-xg,y1-yg]
-            state = position_data
+            
+            #state = position_data
+            rho0,phi0 = cart2pol(x-xg,y-yg)
+            rho1,phi1 = cart2pol(x1-xg,y1-yg)
+            state = [rho0,phi0,rho1,phi1]
             
             reward,done,prev_shaping = reward_function(position_data,prev_shaping)
 
@@ -178,17 +191,21 @@ class Mitsos():
                 # sensor_data += list(sensors)
                 x1,y1,z1 = self.get_robot_position()
 
-        c = 10
-        x,y,x1,y1,xg,yg = c*x,c*y,c*x1,c*y1,c*xg,c*yg
+        x,y,x1,y1,xg,yg = x,y,x1,y1,xg,yg
         position_data = [x-xg,y-yg,x1-xg,y1-yg]
 
 
         #state = [camera_stack, sensor_data + position_data]
         #state = sensor_data + position_data
-        state = position_data 
+        #state = position_data
+        rho0,phi0 = cart2pol(x-xg,y-yg)
+        rho1,phi1 = cart2pol(x1-xg,y1-yg)
+        state = [rho0,phi0,rho1,phi1]
 
         # REWARD
         reward,done,self.shaping = reward_function(position_data,self.shaping)
+        
+        if reward == 100: print('goal')
 
         if self.stepCounter >= self.max_steps:
             done = True
