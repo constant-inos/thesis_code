@@ -18,10 +18,9 @@ tar xf julia-1.3.0-linux-x86_64.tar.gz
 sudo ln -s ~/julia-1.3.0/bin/julia /usr/local/bin/julia
 
 pip install vizdoom
-pip install varname
 
 
-julia
+# julia
 
-using Pkg
-Pkg.add("CxxWrap")
+# using Pkg
+# Pkg.add("CxxWrap")

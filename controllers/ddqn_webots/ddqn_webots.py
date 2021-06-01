@@ -3,6 +3,8 @@ current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfra
 parent_dir = os.path.dirname(current_dir)
 parent_dir = os.path.dirname(parent_dir)
 sys.path.insert(0, parent_dir) 
+print(parent_dir)
+exit()
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  #cut annoying tf messages
 
@@ -29,6 +31,13 @@ from extras.experience_memory import *
 from networks.networks import *
 import __main__
 from datetime import datetime
+
+def WithNoise(input_vector):
+    mean = 0
+    std = 0.005
+    n = len(input_vector)
+    noise = np.random.normal(mean,std,n)
+    return list(np.array(input_vector) + noise)
 
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -60,6 +69,7 @@ k = -1
 filename = os.path.join(parent_dir,'history','checkpoint')
 
 scores = deque(maxlen=100)
+goals = deque(maxlen=100)
 i = 0
 
 if os.path.exists(filename):
@@ -89,8 +99,13 @@ while (True):
         else:
             state = np.expand_dims(observation,axis=0)
             new_state = np.expand_dims(observation_,axis=0)
+            
 
         agent.store_experience(state,action_idx,reward,new_state,done)
+        # # Add exp from noise
+        # agent.store_experience(np.expand_dims(WithNoise(state[0]),axis=0),action_idx,reward,np.expand_dims(WithNoise(new_state[0]),axis=0),done)
+        # agent.store_experience(np.expand_dims(WithNoise(state[0]),axis=0),action_idx,reward,np.expand_dims(WithNoise(new_state[0]),axis=0),done)
+        
         observation = observation_
         if training: agent.learn()
         score += reward
@@ -105,7 +120,9 @@ while (True):
             training = True
             agent.epsilon = epsilon_train
             print('Training on')
-            
+    
+    goal = (reward == 100)
+          
     her_memory = env.her.in_done()
     for m in her_memory:
         state,action_idx,reward,new_state,done = m
@@ -115,11 +132,14 @@ while (True):
         
     
     L.add_log('score',score)
+    L.add_log('goals',goal)
     L.save_game()
+    
     scores.append(score)
+    goals.append(goal)
 
 
-    print('EPISODE:',i,'STEPS:',ep_steps,'EPSILON',agent.epsilon,'SCORE:',score,'AVG SCORE:',np.mean(scores),'\n')
+    print('EPISODE:',i,'STEPS:',ep_steps,'EPSILON',agent.epsilon,'SCORE:',score,'AVG SCORE:',np.mean(scores),'goals/100:',sum(goals),'\n')
     agent.save_model()
 
     i += 1

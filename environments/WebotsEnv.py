@@ -15,6 +15,13 @@ import cv2
 
 OF = OpticalFlow()
 
+def WithNoise(input_vector):
+    mean = 0
+    std = 0.005
+    n = len(input_vector)
+    noise = np.random.normal(mean,std,n)
+    return list(np.array(input_vector) + noise)
+
 def cart2pol(x, y):
     rho = np.sqrt(x**2 + y**2)
     phi = np.arctan2(y, x)
@@ -92,6 +99,8 @@ class HER():
             rho1,phi1 = cart2pol(x1-xg,y1-yg)
             state = [rho0,phi0,rho1,phi1]
             
+            
+            
             reward,done,prev_shaping = reward_function(position_data,prev_shaping)
 
             done = (i==n-1)
@@ -101,6 +110,11 @@ class HER():
             
             if prev_state is not None:
                 memory.append([prev_state,prev_action,prev_reward,state,prev_done])
+                
+                # # Add Gaussian Noise to increase data and regularize
+                # memory.append([WithNoise(prev_state),prev_action,prev_reward,WithNoise(state),prev_done])
+                # memory.append([WithNoise(prev_state),prev_action,prev_reward,WithNoise(state),prev_done])
+
             prev_state,prev_action,prev_reward,prev_done = state,action,reward,done
         
         return memory
