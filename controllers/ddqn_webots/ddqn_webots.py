@@ -3,8 +3,6 @@ current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfra
 parent_dir = os.path.dirname(current_dir)
 parent_dir = os.path.dirname(parent_dir)
 sys.path.insert(0, parent_dir) 
-print(parent_dir)
-exit()
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  #cut annoying tf messages
 
@@ -25,7 +23,7 @@ import tensorflow as tf
 import extras.optical_flow as of
 from extras.statistics import *
 
-from environments.WebotsEnv import *
+from environments.WebotsEnv3 import *
 from agents.DDQN import Agent
 from extras.experience_memory import *
 from networks.networks import *
@@ -50,7 +48,7 @@ keyboard = Keyboard() # to control training from keyboard input
 keyboard.enable(env.timestep)
 
 n_inputs = 1
-agent = Agent(action_size=env.action_size, lr=0.001, mem_size=50000, epsilon_step=1/100000 ,Network=SimpleDQN, Memory=Memory, n_inputs=n_inputs, update_target_freq=30, train_interval=10, batch_size=32)
+agent = Agent(action_size=env.action_size, lr=0.001, mem_size=50000, epsilon_step=1/50000 ,Network=SimpleDQN, Memory=Memory, n_inputs=n_inputs, update_target_freq=30, train_interval=10, batch_size=32)
 
 if n_inputs==2:
     state = [tf.convert_to_tensor([state[0]]),tf.convert_to_tensor([state[1]])]
@@ -88,9 +86,6 @@ while (True):
 
         action_idx = agent.choose_action(observation)
         
-        k = keyboard.getKey()
-        if k>60: action_idx = k-314
-
         observation_, reward, done, info = env.step(action_idx)
         
         if n_inputs == 2:
@@ -100,37 +95,17 @@ while (True):
             state = np.expand_dims(observation,axis=0)
             new_state = np.expand_dims(observation_,axis=0)
             
-
         agent.store_experience(state,action_idx,reward,new_state,done)
-        # # Add exp from noise
-        # agent.store_experience(np.expand_dims(WithNoise(state[0]),axis=0),action_idx,reward,np.expand_dims(WithNoise(new_state[0]),axis=0),done)
-        # agent.store_experience(np.expand_dims(WithNoise(state[0]),axis=0),action_idx,reward,np.expand_dims(WithNoise(new_state[0]),axis=0),done)
-        
+
         observation = observation_
         if training: agent.learn()
         score += reward
         ep_steps += 1
         L.tick()
-        if k == 43:
-            training = False
-            epsilon_train = agent.epsilon
-            agent.epsilon = agent.epsilon_min
-            print('Training off')
-        if k == 45:
-            training = True
-            agent.epsilon = epsilon_train
-            print('Training on')
+
     
     goal = (reward == 100)
           
-    her_memory = env.her.in_done()
-    for m in her_memory:
-        state,action_idx,reward,new_state,done = m
-        state = np.expand_dims(state,axis=0)
-        new_state = np.expand_dims(new_state,axis=0)
-        agent.store_experience(state,action_idx,reward,new_state,done)
-        
-    
     L.add_log('score',score)
     L.add_log('goals',goal)
     L.save_game()
@@ -143,6 +118,7 @@ while (True):
     agent.save_model()
 
     i += 1
+    score = 0
 
     if i % RESTORE_DAMAGE == 0:
         keep_variables = [agent.memory.memory,agent.memory.memCounter,agent.epsilon,env.task,i,scores,L.Variables,L.fname,L.time,L.t]
