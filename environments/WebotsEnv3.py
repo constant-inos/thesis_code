@@ -100,7 +100,7 @@ class Mitsos():
         self.action_size = len(self.discrete_actions)
         self.stepCounter = 0
         self.substeps = 20
-        self.n_obstacles = 0
+        self.n_obstacles = 2
         self.shaping = None
         self.FIXED_ORIENTATION = False
         self.RELATIVE_ROTATION = True
@@ -241,7 +241,7 @@ class Mitsos():
             d = D(self.GOAL,self.START) * random.random()
             a = random.random()*np.pi*2
             x,y = pol2cart(d,a)
-            self.obstacles.append([x,y,0.03])
+            self.obstacles.append([x,y,0])
 
     def render(self):
         return
@@ -367,7 +367,7 @@ class Mitsos():
 
     def get_object_proto(self,object='',pos=[0,0,0]):
 
-        translation = str(pos[1])+' '+str(pos[2]+0.05)+' '+str(pos[0])
+        translation = str(pos[1])+' '+str(pos[2]+0.025)+' '+str(pos[0])
         return "DEF OBS SolidBox {  translation "+translation+"  size 0.05 0.05 0.05}"
 
         # # needs change
