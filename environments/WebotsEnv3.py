@@ -157,7 +157,8 @@ class Mitsos():
         
         position_data = []
         
-
+        sensor_data = list(self.read_ir())
+        
         for i in range(self.substeps):
             self.robot.step(self.timestep)
         x1,y1,z1 = self.get_robot_position()
@@ -165,7 +166,7 @@ class Mitsos():
         collision = self.collision()
 
         position_data = [x-xg,y-yg,x1-xg,y1-yg]
-        sensor_data = list(self.read_ir())
+        sensor_data += list(self.read_ir())
 
 
         #state = [camera_stack, sensor_data + position_data]
@@ -241,7 +242,7 @@ class Mitsos():
             d = D(self.GOAL,self.START) * random.random()
             a = random.random()*np.pi*2
             x,y = pol2cart(d,a)
-            self.obstacles.append([x,y,0])
+            self.obstacles.append([x,y,0.03])
 
     def render(self):
         return
