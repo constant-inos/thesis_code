@@ -96,12 +96,14 @@ class Mitsos():
         self.sensors_shape = (14,)
 
         self.task = "Goal_Following"
-        self.discrete_actions = [0,1,2,3] 
+        self.discrete_actions = [0,1,2]  #[0,1,2,3] 
         self.action_size = len(self.discrete_actions)
         self.stepCounter = 0
-        self.substeps = 4
+        self.substeps = 20
+        self.n_obstacles = 2
         self.shaping = None
-        self.misc = [0,0]
+        self.FIXED_ORIENTATION = False
+        self.RELATIVE_ROTATION = True
 
         self.create_world()
 
@@ -126,28 +128,44 @@ class Mitsos():
         x,y,z = self.get_robot_position()
         self.path.append((x,y))
 
-        # Take action
-        if action_idx == 0:
-            a = 0
-        if action_idx == 1:
-            a = 90
-        if action_idx == 2:
-            a = 180
-        if action_idx == 3:
-            a = -90
-        
-        self.turn0(a)
-        self.set_wheels_speed(1,0)
+        if self.FIXED_ORIENTATION:
+            # Take action
+            if action_idx == 0:
+                a = 0
+            if action_idx == 1:
+                a = 90
+            if action_idx == 2:
+                a = 180
+            if action_idx == 3:
+                a = -90
+            self.turn0(a)
+            self.set_wheels_speed(1,0)
 
-        camera_stack = np.zeros(shape=self.cam_shape+(self.substeps,))
+        elif self.RELATIVE_ROTATION:
+            if action_idx == 0:
+                a = -45
+            if action_idx == 1:
+                a = 0
+            if action_idx == 2:
+                a = 45
+            self.turn(a)
+            self.set_wheels_speed(1,0)
+
+
+        camera_stack = np.zeros(shape=self.cam_shape+(4,))
         sensor_data = []
         
         position_data = []
         
+
         for i in range(self.substeps):
-            frame = self.read_camera()
-            camera_stack[:,:,i] = frame
             self.robot.step(self.timestep)
+
+            if self.substeps-i <= 4:
+                j = self.substeps - i - 1
+                frame = self.read_camera()
+                camera_stack[:,:,j] = frame
+
         x1,y1,z1 = self.get_robot_position()
 
         collision = self.collision()
@@ -156,8 +174,8 @@ class Mitsos():
         sensor_data = list(self.read_ir())
 
 
-        #state = [camera_stack, sensor_data + position_data]
-        state = sensor_data + position_data
+        state = [camera_stack, sensor_data + position_data]
+        #state = sensor_data + position_data
         # state = position_data
         # rho0,phi0 = cart2pol(x-xg,y-yg)
         # rho1,phi1 = cart2pol(x1-xg,y1-yg)
@@ -221,7 +239,7 @@ class Mitsos():
 
     def set_obstacle_positions(self):
         
-        n = 2
+        n = self.n_obstacles
         self.obstacles = []
         
         while len(self.obstacles) < n:
@@ -229,7 +247,7 @@ class Mitsos():
             d = D(self.GOAL,self.START) * random.random()
             a = random.random()*np.pi*2
             x,y = pol2cart(d,a)
-            self.obstacles.append([x,y,-0.05])
+            self.obstacles.append([x,y,0])
 
     def render(self):
         return
@@ -279,18 +297,16 @@ class Mitsos():
         self.wheels[1].setVelocity(u2)
 
     def turn(self,a):
-        w = 1.001
-        if a == 0: return
-        if a == 90: 
-            self.set_wheels_speed(0,w)
-            for i in range(70): self.robot.step(self.timestep)
-        if a == -90:
-            w = -w
-            self.set_wheels_speed(0,w)
-            for i in range(70): self.robot.step(self.timestep)            
-        if a == 180:
-            self.set_wheels_speed(0,w)
-            for i in range(140): self.robot.step(self.timestep)        
+        phi = np.rad2deg(self.get_robot_rotation()[-1])
+        phi1 = phi + a
+
+        w=-2
+        w = int(w * np.sign(a))
+        self.set_wheels_speed(0,w)
+
+        while(np.abs(phi - phi1)%360 > 5):
+            self.robot.step(self.timestep)
+            phi = np.rad2deg(self.get_robot_rotation()[-1])
 
 
     def turn0(self,a):
@@ -357,7 +373,7 @@ class Mitsos():
 
     def get_object_proto(self,object='',pos=[0,0,0]):
 
-        translation = str(pos[1])+' '+str(pos[2]+0.05)+' '+str(pos[0])
+        translation = str(pos[1])+' '+str(pos[2]+0.025)+' '+str(pos[0])
         return "DEF OBS SolidBox {  translation "+translation+"  size 0.05 0.05 0.05}"
 
         # # needs change
