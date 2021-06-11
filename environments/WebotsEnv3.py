@@ -100,7 +100,8 @@ class Mitsos():
         self.action_size = len(self.discrete_actions)
         self.stepCounter = 0
         self.substeps = 20
-        self.n_obstacles = 2
+        self.n_obstacles = 8
+        self.d = 0.5
         self.shaping = None
         self.FIXED_ORIENTATION = False
         self.RELATIVE_ROTATION = True
@@ -204,16 +205,15 @@ class Mitsos():
         mode = 1
         
         if mode == 0:
-            self.GOAL =  [0,0,0]   #self.random_position()
-            self.START = [0.2,0.2,0]   #self.random_position()
+            self.GOAL =  [0,0,0]
+            self.START = [0.2,0.2,0]
         
         if mode == 1:
-            self.GOAL =  [0,0,0]   #self.random_position()
+            self.GOAL =  [0,0,0]
 
-            d = 0.2
             a = random.random()*np.pi*2
-            x,y = pol2cart(d,a)
-            self.START = [x,y,0]
+            x,y = pol2cart(self.d,a)
+            self.START = [x+self.GOAL[0],y+self.GOAL[1],0]
         
         while(True):
             try:
@@ -238,11 +238,11 @@ class Mitsos():
         self.obstacles = []
         
         while len(self.obstacles) < n:
-
-            d = D(self.GOAL,self.START) * random.random()
+            r = (random.random() + 0.25) / 1.25 # 0.2 < r < 0.8
+            d = D(self.GOAL,self.START) * r
             a = random.random()*np.pi*2
             x,y = pol2cart(d,a)
-            self.obstacles.append([x,y,0.03])
+            self.obstacles.append([x+self.GOAL[0],y+self.GOAL[1],0])
 
     def render(self):
         return
