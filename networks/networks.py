@@ -71,7 +71,7 @@ class ConvDQN(keras.Model):
         
 class ComplexDQN(keras.Model):
     def __init__(self,output_size):
-        super(ComplexDQN,self).__init__()
+        super(Net0,self).__init__()
         
         self.conv = ConvNet(filters=[64,64])
         self.simple = DenseNet(units=[64])
@@ -125,3 +125,44 @@ class SimpleACNet(keras.Model):
         v = self.v(x)
         
         return v,pi
+
+
+class SimpleDDPG_actor(keras.Model):
+    def __init__(self,n_actions,name='ddpg_actor'):
+        super(SimpleDDPG_actor, self).__init__()
+        self.n_actions = n_actions
+        self.model_name=name 
+        last_init = tf.random_uniform_initializer(minval=-0.003, maxval=0.003)
+
+        # ACTOR
+
+        self.actor_main = DenseNet([256,256])
+        self.actor_out = Dense(n_actions,activation='tanh',kernel_initializer=last_init)
+
+
+    def call(self,state):
+        x = self.actor_main(state)
+        action = self.actor_out(x)  # UPPER BOUND?
+        return action 
+
+class SimpleDDPG_critic(keras.Model):
+    def __init__(self,n_actions,name='ddpg_critic'):
+        super(SimpleDDPG_critic,self).__init__()
+        self.n_actions = n_actions
+        self.model_name=name 
+
+        self.critic_state_in = DenseNet([16,32])
+        self.critic_action_in = DenseNet([32])
+
+        self.critic_main = DenseNet([256,256])
+        self.critic_out = Dense(n_actions)
+
+    def call(self,state,action):
+        x_a = self.critic_state_in(state)
+        x_b = self.critic_action_in(action)
+        x = Concatenate(axis=-1)([x_a,x_b])
+        x = self.critic_main(x)
+        value = self.critic_out(x)
+        return value
+
+
