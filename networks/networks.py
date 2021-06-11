@@ -71,7 +71,7 @@ class ConvDQN(keras.Model):
         
 class ComplexDQN(keras.Model):
     def __init__(self,output_size):
-        super(Net0,self).__init__()
+        super(ComplexDQN,self).__init__()
         
         self.conv = ConvNet(filters=[64,64])
         self.simple = DenseNet(units=[64])
