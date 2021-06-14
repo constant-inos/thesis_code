@@ -12,8 +12,12 @@ from extras import obstacles
 import numpy as np
 import random
 import cv2
+import __main__
 
-OF = OpticalFlow()
+main_script = __main__.__file__.split('.')[0]
+episode_filename = os.path.join(parent_dir,'history',main_script+'_episode')
+
+#OF = OpticalFlow()
 
 def WithNoise(input_vector):
     mean = 0
@@ -64,7 +68,7 @@ def reward_function(position_data,prev_shaping,collision=False):
         
 class Mitsos():
     # Webots-to-environment-agnostic
-    def __init__(self,max_steps=200):
+    def __init__(self,max_steps=200,ACTIONS='DISCRETE'):
         self.name = "Mitsos"
         self.max_steps = max_steps
 
@@ -94,18 +98,32 @@ class Mitsos():
 
         self.cam_shape = (self.camera.getWidth(),self.camera.getHeight())
         self.sensors_shape = (14,)
-
-        self.task = "Goal_Following"
-        self.discrete_actions = [0,1,2]  #[0,1,2,3] 
-        self.action_size = len(self.discrete_actions)
         self.stepCounter = 0
+        self.shaping = None
+
+        # Actions
+        self.ACTIONS = ACTIONS
+        self.RELATIVE_ROTATIONS = True
+        self.FIXED_ORIENTATIONS = False
+        
+        # State
+        self.POSITION = True
+        self.IRSENSORS = True
+        self.CAMERA = False
+        
+        if self.FIXED_ORIENTATIONS:
+            self.discrete_actions = [0,1,2,3] 
+        if self.RELATIVE_ROTATIONS:
+            self.discrete_actions = [0,1,2]
+        
+        if self.ACTIONS=='DISCRETE':
+            self.action_size = len(self.discrete_actions)
+        else:
+            self.action_size = 2
+
         self.substeps = 20
         self.n_obstacles = 8
         self.d = 0.5
-        self.shaping = None
-        self.FIXED_ORIENTATION = False
-        self.RELATIVE_ROTATION = True
-
         self.create_world()
 
     def reset(self,reset_position=True):
@@ -119,38 +137,46 @@ class Mitsos():
         self.set_orientation(np.random.choice([0,np.pi/2,np.pi,-np.pi/2]))
 
         self.shaping = None
-        state,_,_,_ = self.step(1)
+        if self.ACTIONS=='DISCRETE':
+            state,_,_,_ = self.step(1)
+        else:
+            state,_,_,_ = self.step([1,0])
         return state
 
 
-    def step(self,action_idx):
+    def step(self,action):
 
         [xg,yg,_] = self.GOAL
         x,y,z = self.get_robot_position()
         self.path.append((x,y))
 
-        if self.FIXED_ORIENTATION:
-            # Take action
-            if action_idx == 0:
-                a = 0
-            if action_idx == 1:
-                a = 90
-            if action_idx == 2:
-                a = 180
-            if action_idx == 3:
-                a = -90
-            self.turn0(a)
-            self.set_wheels_speed(1,0)
-
-        elif self.RELATIVE_ROTATION:
-            if action_idx == 0:
-                a = -45
-            if action_idx == 1:
-                a = 0
-            if action_idx == 2:
-                a = 45
-            self.turn(a)
-            self.set_wheels_speed(1,0)
+        if self.ACTIONS=='DISCRETE':
+            if self.FIXED_ORIENTATIONS:
+                # Take action
+                if action == 0:
+                    a = 0
+                if action == 1:
+                    a = 90
+                if action == 2:
+                    a = 180
+                if action == 3:
+                    a = -90
+                self.turn0(a)
+                self.set_wheels_speed(1,0)
+    
+            elif self.RELATIVE_ROTATIONS:
+                if action == 0:
+                    a = -45
+                if action == 1:
+                    a = 0
+                if action == 2:
+                    a = 45
+                self.turn(a)
+                self.set_wheels_speed(1,0)
+            
+        elif self.ACTIONS=='CONTINUOUS':
+            u,w = action
+            self.set_wheels_speed(u,w)
 
 
         camera_stack = np.zeros(shape=self.cam_shape+(4,))
@@ -168,14 +194,19 @@ class Mitsos():
 
         position_data = [x-xg,y-yg,x1-xg,y1-yg]
         sensor_data += list(self.read_ir())
-
-
-        #state = [camera_stack, sensor_data + position_data]
-        state = sensor_data + position_data
-        # state = position_data
+        
         # rho0,phi0 = cart2pol(x-xg,y-yg)
         # rho1,phi1 = cart2pol(x1-xg,y1-yg)
         # state = [rho0,phi0,rho1,phi1]
+
+        state = []
+        if self.POSITION:
+            state += position_data
+        if self.IRSENSORS:
+            state += sensor_data
+        if self.CAMERA:
+            state = [camera_stack,state]
+
 
         # REWARD
         reward,done,self.shaping = reward_function(position_data,self.shaping,collision)
@@ -186,14 +217,12 @@ class Mitsos():
             done = True
 
         if done:
-            filename = os.path.join(parent_dir,'history','episode')
+            
             vars = [self.path,self.GOAL,self.obstacles]
             vars = np.array(vars,dtype=object)
-            f = open(filename,'wb')
+            f = open(episode_filename,'wb')
             np.save(f,vars)
             f.close()
-
-            #self.store_path()
 
         self.stepCounter += 1
         info = ''
@@ -288,8 +317,8 @@ class Mitsos():
         u1 = u + w
         u2 = u - w
 
-        self.wheels[0].setVelocity(u1)
-        self.wheels[1].setVelocity(u2)
+        self.wheels[0].setVelocity(float(u1))
+        self.wheels[1].setVelocity(float(u2))
 
     def turn(self,a):
         phi = np.rad2deg(self.get_robot_rotation()[-1])
