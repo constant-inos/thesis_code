@@ -23,7 +23,7 @@ import tensorflow as tf
 import extras.optical_flow as of
 from extras.statistics import *
 
-from environments.WebotsEnvC import *
+from environments.WebotsEnv3 import *
 from agents.DDPG import Agent
 from extras.experience_memory import *
 from networks.networks import *
@@ -41,7 +41,7 @@ def WithNoise(input_vector):
 dir_path = os.path.dirname(os.path.realpath(__file__))
 L = Logger()
 
-env = Mitsos()
+env = Mitsos(ACTIONS='CONTINUOUS')
 state = env.reset()
 
 keyboard = Keyboard() # to control training from keyboard input
@@ -78,15 +78,15 @@ RESTORE_DAMAGE = 30
 n_games = 500000
 training = True
 
-k = -1
-filename = os.path.join(parent_dir,'history','checkpoint')
+main_script = __file__.split('.')[0]
+filename = os.path.join(parent_dir,'history',main_script+'_checkpoint')
 
 scores = deque(maxlen=100)
 goals = deque(maxlen=100)
 i = 0
 
 if os.path.exists(filename):
-    [agent.memory.memory,agent.memory.memCounter,env.task,i,scores,L.Variables,L.fname,L.time,L.t] = list(np.load(filename,allow_pickle=True))
+    [agent.memory.memory,agent.memory.memCounter,i,scores,L.Variables,L.fname,L.time,L.t] = list(np.load(filename,allow_pickle=True))
     env.total_steps = agent.memory.memCounter
 
 while (True):
@@ -96,7 +96,7 @@ while (True):
     observation = env.reset()
     ep_steps = 0
     current_time = datetime.now().strftime("%H:%M:%S")
-    print('GAME:',i,' - TASK:',env.task,' - CURRENT TIME:',current_time)
+    print('GAME:',i,' - CURRENT TIME:',current_time)
     while not done:
 
         action = agent.choose_action(observation)
@@ -134,7 +134,7 @@ while (True):
     score = 0
 
     if i % RESTORE_DAMAGE == 0:
-        keep_variables = [agent.memory.memory,agent.memory.memCounter,env.task,i,scores,L.Variables,L.fname,L.time,L.t]
+        keep_variables = [agent.memory.memory,agent.memory.memCounter,i,scores,L.Variables,L.fname,L.time,L.t]
         keep_variables = np.array(keep_variables,dtype=object)
         f = open(filename,'wb')
         np.save(f,keep_variables)
