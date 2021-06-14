@@ -71,11 +71,10 @@ agent.target_model(state)
 
 agent.load_model()
 
-RESTORE_DAMAGE = 30
-n_games = 500000
-training = True
 epsilon_train = agent.epsilon
-k = -1
+RESTORE_DAMAGE = 30
+training = True
+reset_world = reset_position = training
 
 main_script = __file__.split('.')[0]
 filename = os.path.join(parent_dir,'history',main_script+'_checkpoint')
@@ -92,7 +91,7 @@ while (True):
 
     done = False
     score = 0
-    observation = env.reset()
+    observation = env.reset(reset_position=reset_position,reset_world=reset_world)
     ep_steps = 0
     current_time = datetime.now().strftime("%H:%M:%S")
     print('GAME:',i,' - CURRENT TIME:',current_time)
@@ -130,6 +129,8 @@ while (True):
 
     print('EPISODE:',i,'STEPS:',ep_steps,'EPSILON',agent.epsilon,'SCORE:',score,'AVG SCORE:',np.mean(scores),'goals/100:',sum(goals),'\n')
     agent.save_model()
+
+    #env.map.plot_map()
 
     i += 1
     score = 0
