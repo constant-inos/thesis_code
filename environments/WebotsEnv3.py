@@ -49,7 +49,7 @@ def reward_function(position_data,prev_shaping,collision=False):
     X,Y,X1,Y1 = position_data
     
     reward = 0
-    sh1 = -100*(X1**2+Y1**2) 
+    sh1 = -100*(X1**2+Y1**2) * 5
     shaping = sh1
     if prev_shaping is not None:
         reward = shaping - prev_shaping
@@ -121,9 +121,9 @@ class Mitsos():
         else:
             self.action_size = 2
 
-        self.substeps = 20
-        self.n_obstacles = 8
-        self.d = 0.5
+        self.substeps = 10
+        self.n_obstacles = 25
+        self.d = 0.3
         self.create_world()
 
     def reset(self,reset_position=True):
@@ -267,8 +267,9 @@ class Mitsos():
         self.obstacles = []
         
         while len(self.obstacles) < n:
-            r = (random.random() + 0.25) / 1.25 # 0.2 < r < 0.8
-            d = D(self.GOAL,self.START) * r
+            # r = (random.random() + 0.25) / 1.25 # 0.2 < r < 0.8
+            # d = D(self.GOAL,self.START) * r
+            d = random.uniform(0.15,1)
             a = random.random()*np.pi*2
             x,y = pol2cart(d,a)
             self.obstacles.append([x+self.GOAL[0],y+self.GOAL[1],0])
