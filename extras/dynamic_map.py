@@ -16,29 +16,6 @@ class DynamicMap(object):
     def discretize(self,x,y):
         return [int(x/self.map_unit),int(y/self.map_unit)]
 
-    def spatial_std_reward(self):
-        path = self.path[-20:]
-        x = [p[0] for p in path]
-        y = [p[1] for p in path]
-        l = len(path)
-        if l<20: return 0
-
-        # point center
-        c_x = np.mean(x)
-        c_y = np.mean(y)
-
-        std = 0
-        for i in range(l):
-            d = np.sqrt( (x[i]-c_x)**2 + (y[i]-c_y)**2)
-            std += d
-        std = std / l
-
-        
-        shaped_std = 1 - 1/(2*std+0.5)
-        if std > 0.3:
-            shaped_std = shaped_std*0.5
-
-        return shaped_std 
 
     def reset(self,x_start,y_start,map_unit):
         self.__init__(x_start,y_start,map_unit)
@@ -83,14 +60,6 @@ class DynamicMap(object):
 
         return
 
-    def add_obstacle(self,x,y):
-        #self.path.append([int(x*1000),int(y*1000),'r'])
-        return
-
-    def get_covered_area(self):
-        # points = convex_hull(self.map)
-        # area = calculate_area(points)
-        return # area
 
     def plot_map(self):
         plot = self.map.T
@@ -98,20 +67,3 @@ class DynamicMap(object):
         plt.pause(1)
         plt.close()
         return
-
-    def expanding_map_reward(self):
-        forward_step_distance = 0.00256 
-        steps_to_unit = np.round(self.map_unit / forward_step_distance) # forward steps to cover map unit
-        m = 50
-        last_steps = self.path[-m:-1]
-        pos = self.path[-1]
-        r = 0
-        c = last_steps.count(pos)
-        if c < steps_to_unit*0.3:
-            r = 2 + 15* (pos not in self.path)
-        if c > steps_to_unit*5:
-            r = -2
-
-        return r
-
-
