@@ -121,20 +121,30 @@ class Mitsos():
         else:
             self.action_size = 2
 
+        self.path = []
         self.substeps = 10
         self.n_obstacles = 25
         self.d = 0.3
         self.create_world()
+        self.map = DynamicMap(self.START[0],self.START[1],0.02)
 
-    def reset(self,reset_position=True):
-
-        self.create_world()
-
+    def reset(self,reset_position=True,reset_world=True):
         self.stepCounter = 0
-        self.path = [(self.START[0],self.START[1])]
 
-        self.set_position(self.START[0],self.START[1],0.005)  
-        self.set_orientation(np.random.choice([0,np.pi/2,np.pi,-np.pi/2]))
+        if reset_world:
+            self.create_world()
+            self.map.reset(self.START[0],self.START[1],0.02)
+            self.path = [(self.START[0],self.START[1])]
+        else:
+            x,y,z = self.get_robot_position()
+            if D((x,y,z),self.GOAL) < 0.05:
+                rho = d
+                phi = random.random()*2*np.pi
+                xg,yg = pol2cart(rho,phi)
+                self.GOAL = xg,yg
+        if reset_position:
+            self.set_position(self.START[0],self.START[1],0.005)  
+            self.set_orientation(np.random.choice([0,np.pi/2,np.pi,-np.pi/2]))
 
         self.shaping = None
         if self.ACTIONS=='DISCRETE':
@@ -149,6 +159,7 @@ class Mitsos():
         [xg,yg,_] = self.GOAL
         x,y,z = self.get_robot_position()
         self.path.append((x,y))
+        self.map.visit(x,y)
 
         if self.ACTIONS=='DISCRETE':
             if self.FIXED_ORIENTATIONS:
