@@ -12,8 +12,13 @@ from extras import obstacles
 import numpy as np
 import random
 import cv2
+import __main__
+from collections import deque
 
-OF = OpticalFlow()
+main_script = __main__.__file__.split('.')[0]
+episode_filename = os.path.join(parent_dir,'history',main_script+'_episode')
+
+#OF = OpticalFlow()
 
 def WithNoise(input_vector):
     mean = 0
@@ -45,84 +50,26 @@ def reward_function(position_data,prev_shaping,collision=False):
     X,Y,X1,Y1 = position_data
     
     reward = 0
-    sh1 = -100*(X1**2+Y1**2) 
+    sh1 = -100*(X1**2+Y1**2) * 5
     shaping = sh1
     if prev_shaping is not None:
         reward = shaping - prev_shaping
     
     done = False
     if collision:
-        #reward -= 100
+        reward -= 100
         done = True
     
     c=5
     if np.sqrt(X1**2+Y1**2) < c/100:
-        reward = 100
+        reward = 200
         done = True
 
     return reward,done,shaping
-
-class HER():
-    def __init__(self):
-        self.goal = 0,0
-        self.states = []
-        self.actions = []
-        self.rewards = []
-        self.dones = []
-    
-    def reset(self):
-        self.goal = 0,0
-        self.states = []
-        self.actions = []
-        self.rewards = []
-        self.dones = []
-
-    def add(self,s,a):
-        self.states.append(s)
-        self.actions.append(a)
-
-    def in_done(self):
-        memory = []
-        n = len(self.states)
-        prev_shaping = None
-        prev_state = None
-        prev_action = None
-        prev_reward = None
-        prev_done = None
-        xg,yg = self.states[n-1][2],self.states[n-1][3]
-        for i in range(n):
-            [x,y,x1,y1] = self.states[i]
-            position_data = [x-xg,y-yg,x1-xg,y1-yg]
-            
-            #state = position_data
-            rho0,phi0 = cart2pol(x-xg,y-yg)
-            rho1,phi1 = cart2pol(x1-xg,y1-yg)
-            state = [rho0,phi0,rho1,phi1]
-            
-            
-            
-            reward,done,prev_shaping = reward_function(position_data,prev_shaping)
-
-            done = (i==n-1)
-            action = self.actions[i]
-            
-            if done: reward += 100
-            
-            if prev_state is not None:
-                memory.append([prev_state,prev_action,prev_reward,state,prev_done])
-                
-                # # Add Gaussian Noise to increase data and regularize
-                # memory.append([WithNoise(prev_state),prev_action,prev_reward,WithNoise(state),prev_done])
-                # memory.append([WithNoise(prev_state),prev_action,prev_reward,WithNoise(state),prev_done])
-
-            prev_state,prev_action,prev_reward,prev_done = state,action,reward,done
-        
-        return memory
-            
         
 class Mitsos():
     # Webots-to-environment-agnostic
-    def __init__(self,max_steps=200):
+    def __init__(self,max_steps=200,ACTIONS='DISCRETE'):
         self.name = "Mitsos"
         self.max_steps = max_steps
 
@@ -152,113 +99,167 @@ class Mitsos():
 
         self.cam_shape = (self.camera.getWidth(),self.camera.getHeight())
         self.sensors_shape = (14,)
-
-        self.task = "Goal_Following"
-        self.discrete_actions = [[0.5,-1],[1,0],[0.5,1]] 
-        self.action_size = len(self.discrete_actions)
         self.stepCounter = 0
-        self.substeps = 18
         self.shaping = None
-        self.misc = [0,0]
 
+        # Actions
+        self.ACTIONS = ACTIONS
+        self.RELATIVE_ROTATIONS = True
+        self.FIXED_ORIENTATIONS = False
+        
+        # State
+        self.POSITION = True
+        self.IRSENSORS = False
+        self.CAMERA = True
+        
+        self.stack = deque(maxlen=4)
+        
+        if self.FIXED_ORIENTATIONS:
+            self.discrete_actions = [0,1,2,3] 
+        if self.RELATIVE_ROTATIONS:
+            self.discrete_actions = [0,1,2]
+        
+        if self.ACTIONS=='DISCRETE':
+            self.action_size = len(self.discrete_actions)
+        else:
+            self.action_size = 2
+
+        self.substeps = 10
+        self.n_obstacles = 15
+        self.d = 0.3
         self.create_world()
-        self.her = HER()
 
     def reset(self,reset_position=True):
-        
+
         self.create_world()
 
         self.stepCounter = 0
         self.path = [(self.START[0],self.START[1])]
-        self.her.reset()
 
         self.set_position(self.START[0],self.START[1],0.005)  
-        #theta = self.rotation_to_goal((self.GOAL[0],self.GOAL[1]),(self.START[0]-0.1,self.START[1]),(self.START[0],self.START[1]))
-        #self.set_rotation(theta+np.pi)
-        self.set_rotation(random.random()*2*3.14)
+        self.set_orientation(np.random.choice([0,np.pi/2,np.pi,-np.pi/2]))
 
         self.shaping = None
-        state,_,_,_ = self.step(1)
+        if self.ACTIONS=='DISCRETE':
+            state,_,_,_ = self.step(1)
+        else:
+            state,_,_,_ = self.step([1,0])
         return state
 
 
-    def step(self,action_idx):
-        action = self.discrete_actions[action_idx]
+    def step(self,action):
+
         [xg,yg,_] = self.GOAL
         x,y,z = self.get_robot_position()
         self.path.append((x,y))
 
-        u1,u2 = action
-        self.set_wheels_speed(u1,u2)
+        if self.ACTIONS=='DISCRETE':
+            if self.FIXED_ORIENTATIONS:
+                # Take action
+                if action == 0:
+                    a = 0
+                if action == 1:
+                    a = 90
+                if action == 2:
+                    a = 180
+                if action == 3:
+                    a = -90
+                self.turn0(a)
+                self.set_wheels_speed(1,0)
+    
+            elif self.RELATIVE_ROTATIONS:
+                if action == 0:
+                    a = -45
+                if action == 1:
+                    a = 0
+                if action == 2:
+                    a = 45
+                self.turn(a)
+                self.set_wheels_speed(1,0)
+            
+        elif self.ACTIONS=='CONTINUOUS':
+            u,w = action
+            self.set_wheels_speed(u,w)
+
 
         camera_stack = np.zeros(shape=self.cam_shape+(4,))
         sensor_data = []
         
         position_data = []
         
+        sensor_data = list(self.read_ir())
+        
         for i in range(self.substeps):
             self.robot.step(self.timestep)
-            if (self.substeps-i)%(self.substeps//4)==0: # we need only 4 samples per step, substeps irrelevant
-                # cam = self.read_camera()
-                # camera_stack[:,:,i] = cam
-                # sensors = self.read_ir()
-                # sensor_data += list(sensors)
-                x1,y1,z1 = self.get_robot_position()
+            if self.CAMERA and (i % (self.substeps/2) == 0):
+                frame = self.read_camera()
+                self.stack.append(frame)
+        x1,y1,z1 = self.get_robot_position()
 
-        x,y,x1,y1,xg,yg = x,y,x1,y1,xg,yg
+        collision = self.collision()
+
         position_data = [x-xg,y-yg,x1-xg,y1-yg]
+        sensor_data += list(self.read_ir())
+        
+        if self.CAMERA:
+            for i in range(len(self.stack)):
+                camera_stack[:,:,i] = self.stack[i]
 
+        # rho0,phi0 = cart2pol(x-xg,y-yg)
+        # rho1,phi1 = cart2pol(x1-xg,y1-yg)
+        # state = [rho0,phi0,rho1,phi1]
 
-        #state = [camera_stack, sensor_data + position_data]
-        #state = sensor_data + position_data
-        #state = position_data
-        rho0,phi0 = cart2pol(x-xg,y-yg)
-        rho1,phi1 = cart2pol(x1-xg,y1-yg)
-        state = [rho0,phi0,rho1,phi1]
+        state = []
+        if self.POSITION:
+            state += position_data
+        if self.IRSENSORS:
+            state += sensor_data
+        if self.CAMERA:
+            state = [camera_stack,state]
+
 
         # REWARD
-        reward,done,self.shaping = reward_function(position_data,self.shaping)
+        reward,done,self.shaping = reward_function(position_data,self.shaping,collision)
         
-        if reward == 100: print('goal')
+        if reward == 200: print('goal')
 
         if self.stepCounter >= self.max_steps:
             done = True
 
-
         if done:
-            filename = os.path.join(parent_dir,'history','episode')
+            
             vars = [self.path,self.GOAL,self.obstacles]
             vars = np.array(vars,dtype=object)
-            f = open(filename,'wb')
+            f = open(episode_filename,'wb')
             np.save(f,vars)
             f.close()
-        
-        
-        self.her.add([x,y,x1,y1],action_idx)
 
         self.stepCounter += 1
         info = ''
+
         return state,reward,done,info 
         
 
     def create_world(self):
-        mode = 0
+        mode = 1
         
         if mode == 0:
-            self.GOAL =  [0,0,0]   #self.random_position()
-            self.START = [0.2,0.2,0]   #self.random_position()
-            #if random.random()>0.5: self.START = [-0.2,-0.2,0]
+            self.GOAL =  [0,0,0]
+            self.START = [0.2,0.2,0]
         
         if mode == 1:
-            self.GOAL =  [0,0,0]   #self.random_position()
-            while(True):
-                self.START = self.random_position()
-                d = D(self.START,self.GOAL) 
-                if d>0.18 and d<0.22:
-                    break
-    
-        # obs = self.robot.getFromDef('OBS')
-        # obs.remove()
+            self.GOAL =  [0,0,0]
+
+            a = random.random()*np.pi*2
+            x,y = pol2cart(self.d,a)
+            self.START = [x+self.GOAL[0],y+self.GOAL[1],0]
+        
+        while(True):
+            try:
+                obs = self.robot.getFromDef('OBS')
+                obs.remove()
+            except:
+                break
         
         self.set_obstacle_positions()
         p = self.obstacles
@@ -272,13 +273,16 @@ class Mitsos():
 
     def set_obstacle_positions(self):
         
-        n = 0
+        n = self.n_obstacles
         self.obstacles = []
         
         while len(self.obstacles) < n:
-            [x,y,z] = self.random_position()
-            if D(self.START,(x,y,z)) > 0.1 and D(self.GOAL,(x,y,z)) > 0.1:
-                self.obstacles.append([x,y,z])
+            # r = (random.random() + 0.25) / 1.25 # 0.2 < r < 0.8
+            # d = D(self.GOAL,self.START) * r
+            d = random.uniform(0.15,1)
+            a = random.random()*np.pi*2
+            x,y = pol2cart(d,a)
+            self.obstacles.append([x+self.GOAL[0],y+self.GOAL[1],0])
 
     def render(self):
         return
@@ -311,7 +315,7 @@ class Mitsos():
         Field.setSFVec3f(positionField,[y,z,x])
         for _ in range(5): self.robot.step(self.timestep) # if not nan values in first iteration
     
-    def set_rotation(self,a):
+    def set_orientation(self,a):
         a += np.pi
         object = self.robot.getFromDef(self.name)
         rotationField = object.getField("rotation")  #object.getPosition()
@@ -324,14 +328,46 @@ class Mitsos():
         u1 = u + w
         u2 = u - w
 
-        self.wheels[0].setVelocity(u1)
-        self.wheels[1].setVelocity(u2)
+        self.wheels[0].setVelocity(float(u1))
+        self.wheels[1].setVelocity(float(u2))
+
+    def turn(self,a):
+        phi = np.rad2deg(self.get_robot_rotation()[-1])
+        phi1 = phi + a
+
+        w=-2
+        w = int(w * np.sign(a))
+        self.set_wheels_speed(0,w)
+
+        while(np.abs(phi - phi1)%360 > 5):
+            self.robot.step(self.timestep)
+            phi = np.rad2deg(self.get_robot_rotation()[-1])
+
+
+    def turn0(self,a):
+        phi = np.rad2deg(self.get_robot_rotation()[-1])
+        w = 5
+
+        if phi - a > 180: 
+            w = -w
+
+        self.set_wheels_speed(0,w)
+        while( np.abs(phi - a) >= 3 ):
+            self.robot.step(self.timestep)
+            phi = np.rad2deg(self.get_robot_rotation()[-1])
+
 
     def get_robot_position(self):
         object = self.robot.getFromDef(self.name)
         y,z,x = object.getPosition()
         return [x,y,z]
-        
+
+    def get_robot_rotation(self):
+        object = self.robot.getFromDef(self.name)
+        rotationField = object.getField("rotation")  
+        a=rotationField.getSFRotation()
+        return a
+
     def rotation_to_goal(self,G,X1,X2):
         (xg,yg),(x1,y1),(x2,y2) = G,X1,X2
         
@@ -359,7 +395,6 @@ class Mitsos():
         
         return theta
         
-    
     def wait(self,timesteps):
         for _ in range(timesteps):
             self.robot.step(self.timestep)
@@ -371,26 +406,36 @@ class Mitsos():
         z = 0
         return [x,y,z]
 
-    
-
     def get_object_proto(self,object='',pos=[0,0,0]):
-        # needs change
-        objects = {'Chair':'0.2 ',
-           'Ball':'1.6 ',
-           'ComputerMouse':'1.4 ',
-           'OilBarrel':'0.17 ',
-           'Toilet':'0.13 ',
-           'SolidBox':''}
 
-        if object=='':
-            object = np.random.choice(list(objects.keys()))
+        translation = str(pos[1])+' '+str(pos[2]+0.025)+' '+str(pos[0])
+        return "DEF OBS SolidBox {  translation "+translation+"  size 0.05 0.05 0.05}"
 
-        if object=='SolidBox':
-            translation = str(pos[1])+' '+str(pos[2]+0.05)+' '+str(pos[0])
-            return "DEF OBS SolidBox {  translation "+translation+"  size 0.1 0.1 0.1}"
+        # # needs change
+        # objects = {'Chair':'0.2 ',
+        #    'Ball':'1.6 ',
+        #    'ComputerMouse':'1.4 ',
+        #    'OilBarrel':'0.17 ',
+        #    'Toilet':'0.13 ',
+        #    'SolidBox':''}
+
+        # if object=='':
+        #     object = np.random.choice(list(objects.keys()))
+
+        # if object=='SolidBox':
+        #     translation = str(pos[1])+' '+str(pos[2]+0.05)+' '+str(pos[0])
+        #     return "DEF OBS SolidBox {  translation "+translation+"  size 0.05 0.05 0.05}"
             
-        translation = str(pos[1])+' '+str(pos[2])+' '+str(pos[0])
-        scale = objects[object]*3
-        proto = "DEF OBS Solid {  translation "+translation+"  scale "+scale+" children [    "+object+" {    }  ]}"
-        return proto
+        # translation = str(pos[1])+' '+str(pos[2])+' '+str(pos[0])
+        # scale = objects[object]*3
+        # proto = "DEF OBS Solid {  translation "+translation+"  scale "+scale+" children [    "+object+" {    }  ]}"
+        # return proto
 
+
+    def store_path(self):
+        filename = 'paths'
+        keep_variables = [self.path,self.START,self.GOAL]
+        keep_variables = np.array(keep_variables,dtype=object)
+        f = open(filename,'a')
+        np.save(f,keep_variables)
+        f.close()
