@@ -11,7 +11,7 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 
 from networks.networks import *
-
+from extras.statistics import Logger
 
 class Agent(object):
     def __init__(self, n_actions=2,lr=0.01, gamma=0.99):
@@ -20,7 +20,7 @@ class Agent(object):
         self.n_actions=n_actions
         self.action_space = [i for i in range(n_actions)]
 
-        self.actor_critic = ActorCriticNetwork(n_actions=n_actions)
+        self.actor_critic = SimpleACNet(n_actions=n_actions)
         self.actor_critic.compile(Adam(lr=lr))
 
         self.action = None
@@ -74,11 +74,13 @@ if __name__ == '__main__':
     import gym
 
     env = gym.make('CartPole-v0')
-    agent = Agent(lr= 0.9*1e-5,n_actions=env.action_space.n)
-    n_games = 2000
+    agent = Agent(lr= 0.00005,n_actions=env.action_space.n)
+    n_games = 10000
+    # 1024 512 1*1e-5
 
     score_history = []
     max_score, max_avg = 0,0
+    L = Logger(name='log_AC')
 
 
     for i in range(n_games):
@@ -100,3 +102,13 @@ if __name__ == '__main__':
         if i % 100 == 0: print(max_score,max_avg)
         if score > max_score: max_score = score
         if avg_score > max_avg: max_avg = avg_score
+
+        L.add_log('score',avg_score)
+        if i%20==0:
+            L.save_game()
+
+        if avg_score > 195:
+            L.save_game()
+            exit()
+
+
