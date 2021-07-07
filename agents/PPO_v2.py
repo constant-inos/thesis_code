@@ -2,6 +2,7 @@ import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir) 
+#aaa
 
 import os
 import numpy as np 
@@ -34,28 +35,26 @@ class Agent(object):
         self.PPO_STEPS = 256
 
 
-        self.ppo_network = PPONetwork(n_actions)
-        self.ppo_network.compile(optimizer=Adam(lr=lr))
+        self.actor = Actor(n_actions)
+        self.critic = Critic(n_actions)
+        self.actor.compile( optimizer=Adam(lr=0.00005))
+        self.critic.compile(optimizer=Adam(lr=0.0005))
 
         self.memory = Memory(n_actions=n_actions)
 
     def choose_action(self,state):
         state = tf.convert_to_tensor([state])
-        probs, value = self.ppo_network(state)
+        probs = self.actor(state)
+        value = self.critic(state)
         action_dist = tfp.distributions.Categorical(probs=probs, dtype=tf.float32)
         action = action_dist.sample()
         try:
             log_prob = action_dist.log_prob(action)
         except:
+            print('STATE')
             print(state)
-            print(action,probs,value)
-            print(action_dist)
-            
-            x = self.ppo_network.fc1(state)
-            print(x)
-            x = self.ppo_network.fc2(x)
-            print(x)
-            
+            print('ACTION')
+            print(action)
             exit()
 
         return int(action.numpy()[0]), log_prob.numpy()[0], value.numpy()[0][0]
@@ -102,8 +101,10 @@ class Agent(object):
         for _ in range(self.PPO_EPOCHS):
             for state, action, old_log_probs, return_, advantage in self.ppo_iter(states, actions, log_probs, returns, advantages):
                 # grabs random mini-batches several times until we have covered all data
-                with tf.GradientTape() as tape:
-                    probs,value = self.ppo_network(state)
+                
+                with tf.GradientTape() as tape1:
+                    probs = self.actor(state)
+                    value = self.critic(state)
                     action_dist = tfp.distributions.Categorical(probs=probs, dtype=tf.float32)
                     entropy_loss = tf.math.reduce_mean(action_dist.entropy())
 
@@ -118,9 +119,37 @@ class Agent(object):
 
                     c1 = 0.1
                     c2 = -0.05
-                    loss = actor_loss + c1*critic_loss + c2*entropy_loss
-                gradients = tape.gradient(loss,self.ppo_network.trainable_variables)
-                self.ppo_network.optimizer.apply_gradients(zip(gradients,self.ppo_network.trainable_variables))
+                    #loss = actor_loss + c1*critic_loss + c2*entropy_loss                                                
+                    actor_loss_ = actor_loss - 0.05*entropy_loss
+
+                gradients = tape1.gradient(actor_loss_,self.actor.trainable_variables)
+                self.actor.optimizer.apply_gradients(zip(gradients,self.actor.trainable_variables))
+
+
+                with tf.GradientTape() as tape2:
+                    probs = self.actor(state)
+                    value = self.critic(state)
+                    action_dist = tfp.distributions.Categorical(probs=probs, dtype=tf.float32)
+                    entropy_loss = tf.math.reduce_mean(action_dist.entropy())
+
+                    new_log_probs = action_dist.log_prob(action) 
+                    ratio = tf.math.exp(new_log_probs - old_log_probs)
+                    surr1 = ratio * advantage
+                    surr2 = tf.clip_by_value(ratio,1-e,1+e)*advantage
+
+                    actor_loss = -tf.math.minimum(surr1,surr2)
+                    actor_loss = tf.math.reduce_mean(actor_loss)
+                    critic_loss = tf.math.pow(return_ - value,2)
+
+                    c1 = 0.1
+                    c2 = -0.05
+                    #loss = actor_loss + c1*critic_loss + c2*entropy_loss
+                    critic_loss_ = critic_loss - 0.05*entropy_loss
+
+
+                gradients = tape2.gradient(critic_loss_,self.critic.trainable_variables)
+                self.critic.optimizer.apply_gradients(zip(gradients,self.critic.trainable_variables))
+
 
 
 
@@ -173,7 +202,7 @@ if __name__ == '__main__':
             observation = observation_
 
         obs = tf.convert_to_tensor([observation_])
-        _,next_value = agent.ppo_network(obs)
+        next_value = agent.critic(obs)
         next_value = next_value.numpy()[0][0]
         states,actions,rewards,states_,dones,log_probs,values = agent.read_memory()
         returns = agent.compute_gae(next_value,values,rewards,dones)
