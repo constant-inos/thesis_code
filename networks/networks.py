@@ -198,3 +198,23 @@ class SimpleDDPG_critic(keras.Model):
         return value
 
 
+
+
+class PPONetwork(keras.Model):
+    def __init__(self,n_actions):
+        super(PPONetwork,self).__init__()
+
+        self.fc1 = Dense(48,activation='relu')
+        self.fc2 = Dense(24,activation='relu')
+        
+        self.v = Dense(1,activation='linear')
+        self.pi = Dense(n_actions,activation='softmax')
+
+    def call(self,state):
+        x = self.fc1(state)
+        x = self.fc2(x)
+
+        policy = self.pi(x)
+        value = self.v(x)
+
+        return policy, value
