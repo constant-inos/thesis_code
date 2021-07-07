@@ -114,7 +114,7 @@ class SimpleACNet(keras.Model):
         self.n_actions = n_actions
         self.model_name = name
 
-        self.main = DenseNet([256,512])
+        self.main = DenseNet([48,24])
         self.v = Dense(1, activation='linear')
         self.pi = Dense(n_actions,activation='softmax')
 
@@ -125,6 +125,38 @@ class SimpleACNet(keras.Model):
         v = self.v(x)
         
         return v,pi
+
+class Actor(keras.Model):
+    def __init__(self, n_actions, name='actor'):
+        super(Actor, self).__init__()
+        self.n_actions = n_actions
+        self.model_name = name
+
+        self.main = DenseNet([48,24])
+        self.pi = Dense(n_actions,activation='softmax')
+
+    def call(self,state):
+        x = state
+        x = self.main(x)
+        pi = self.pi(x)
+
+        return pi
+    
+class Critic(keras.Model):
+    def __init__(self, n_actions, name='critic'):
+        super(Critic, self).__init__()
+        self.n_actions = n_actions
+        self.model_name = name
+
+        self.main = DenseNet([48,24])
+        self.v = Dense(1, activation='linear')
+
+    def call(self,state):
+        x = state
+        x = self.main(x)
+        v = self.v(x)
+        
+        return v
 
 
 class SimpleDDPG_actor(keras.Model):
