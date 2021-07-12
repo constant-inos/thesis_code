@@ -132,7 +132,7 @@ class Actor(keras.Model):
         self.n_actions = n_actions
         self.model_name = name
 
-        self.main = DenseNet([48,24])
+        self.main = DenseNet([256,128])
         self.pi = Dense(n_actions,activation='softmax')
 
     def call(self,state):
@@ -148,7 +148,7 @@ class Critic(keras.Model):
         self.n_actions = n_actions
         self.model_name = name
 
-        self.main = DenseNet([48,24])
+        self.main = DenseNet([256,128])
         self.v = Dense(1, activation='linear')
 
     def call(self,state):
@@ -157,6 +157,45 @@ class Critic(keras.Model):
         v = self.v(x)
         
         return v
+
+
+class ActorConv(keras.Model):
+    def __init__(self, n_actions, name='actor'):
+        super(ActorConv, self).__init__()
+        self.n_actions = n_actions
+        self.model_name = name
+
+        self.conv = ConvNet(filters=[64,64])
+        self.main = DenseNet([256,128])
+        self.pi = Dense(n_actions,activation='softmax')
+
+    def call(self,state):
+        x = state
+        x = self.conv(x)
+        x = self.main(x)
+        pi = self.pi(x)
+
+        return pi
+    
+class CriticConv(keras.Model):
+    def __init__(self, n_actions, name='critic'):
+        super(CriticConv, self).__init__()
+        self.n_actions = n_actions
+        self.model_name = name
+        
+        self.conv = ConvNet(filters=[64,64])
+        self.main = DenseNet([256,128])
+        self.v = Dense(1, activation='linear')
+
+    def call(self,state):
+        x = state
+        x = self.conv(x)
+        x = self.main(x)
+        v = self.v(x)
+        
+        return v
+
+
 
 
 class SimpleDDPG_actor(keras.Model):
