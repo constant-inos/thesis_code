@@ -1,0 +1,163 @@
+#VRML_SIM R2021a utf8
+WorldInfo {
+  coordinateSystem "NUE"
+}
+Viewpoint {
+  fieldOfView 1.3
+  orientation 0.4482911283380323 0.7752817536707366 0.4449418688757458 4.4542189520996756
+  position -1.1581181025899054 2.02192810202885 0.0020944292841017305
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+DEF MyFloor Floor {
+  size 2 2
+}
+DEF MyWall1 Solid {
+  translation 0 0.05 1
+  children [
+    DEF wall1 Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 2 0.1 0.01
+      }
+    }
+  ]
+  name "solid(2)"
+  boundingObject USE wall1
+}
+DEF MyWall2 Solid {
+  translation 0 0.05 -1
+  children [
+    DEF wall2 Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 2 0.1 0.01
+      }
+    }
+  ]
+  name "solid(3)"
+  boundingObject USE wall2
+}
+DEF MyWall3 Solid {
+  translation 1 0.05 0
+  rotation 0 1 0 1.5707996938995747
+  children [
+    DEF wall3 Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 2 0.1 0.01
+      }
+    }
+  ]
+  name "solid(4)"
+  boundingObject USE wall3
+}
+DEF MyWall4 Solid {
+  translation -1 0.05 0
+  rotation 0 1 0 1.5707996938995747
+  children [
+    DEF wall22 Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 2 0.1 0.01
+      }
+    }
+  ]
+  name "solid(5)"
+  boundingObject USE wall22
+}
+Wall {
+  translation -0.499437 4.44089e-16 0.166114
+  size 1 0.1 0.01
+}
+Wall {
+  translation 0.155656 1.11022e-15 0.267402
+  name "wall(2)"
+  size 0.01 0.1 1
+}
+Wall {
+  translation 0.332031 -1.22125e-14 0.489127
+  name "wall(10)"
+  size 0.01 0.1 1
+}
+Wall {
+  translation 0.173596 1.59873e-14 -0.714379
+  name "wall(4)"
+  size 0.01 0.1 0.55
+}
+Wall {
+  translation -0.00775929 2.26487e-14 -0.802284
+  name "wall(7)"
+  size 0.01 0.1 0.4
+}
+Wall {
+  translation 0.00257273 1.42109e-14 -0.140087
+  name "wall(5)"
+  size 0.01 0.1 0.6
+}
+Wall {
+  translation 0.000195848 1.11022e-15 0.683529
+  name "wall(3)"
+  size 0.01 0.1 0.6
+}
+Wall {
+  translation 0.691482 3.9968e-15 -0.466477
+  name "wall(1)"
+  size 0.6 0.1 0.01
+}
+Wall {
+  translation 0.353818 -6.21726e-15 -0.226741
+  name "wall(12)"
+  size 0.4 0.1 0.01
+}
+Wall {
+  translation 0.535909 4.66293e-15 -0.00428459
+  name "wall(11)"
+  size 0.4 0.1 0.01
+}
+Wall {
+  translation -0.395723 1.55431e-15 -0.441436
+  name "wall(6)"
+  size 0.8 0.1 0.01
+}
+Wall {
+  translation -0.408982 -2.0985e-22 -0.60736
+  name "wall(9)"
+  size 0.8 0.1 0.01
+}
+Wall {
+  translation -0.491625 4.44089e-16 0.377736
+  name "wall(8)"
+  size 1 0.1 0.01
+}
+DEF Mitsos E-puck {
+  translation -0.692953 -6.66131e-16 -0.0631885
+  controller "ddqn_webots"
+  supervisor TRUE
+  camera_fieldOfView 1.7
+  distance_sensor_numberOfRays 100
+  emitter_channel 13
+  receiver_channel 12
+  turretSlot [
+    DistanceSensor {
+      scale 10 10 10
+      numberOfRays 20
+    }
+  ]
+  groundSensorsSlot [
+    DEF Bumper TouchSensor {
+      translation -0.03 0 0.03
+      rotation 0 0 1 1.57075
+      boundingObject Cylinder {
+        height 0.05
+        radius 0.04
+      }
+    }
+  ]
+}
