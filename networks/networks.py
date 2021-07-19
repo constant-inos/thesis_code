@@ -43,7 +43,7 @@ class SimpleDQN(keras.Model):
     def __init__(self,output_size):
         super(SimpleDQN,self).__init__()
         
-        self.main = DenseNet(units=[128,128,128])
+        self.main = DenseNet(units=[512,256,128])
         self.out = Dense(output_size,activation='linear')
         
     def call(self,INPUT):
@@ -57,7 +57,7 @@ class ConvDQN(keras.Model):
         super(ConvDQN,self).__init__()
         
         self.conv = ConvNet(filters=[64,64])
-        self.main = DenseNet(units=[128,128])
+        self.main = DenseNet(units=[512,256,128])
         self.out = Dense(output_size,activation='linear')
         
     def call(self,INPUT):
@@ -73,11 +73,11 @@ class ComplexDQN(keras.Model):
     def __init__(self,output_size):
         super(ComplexDQN,self).__init__()
         
-        self.conv = ConvNet(filters=[64,64])
+        self.conv = ConvNet(filters=[128,128])
         self.simple = DenseNet(units=[64])
         self.concat = Concatenate(axis=-1)
         
-        self.main = DenseNet(units=[128,128])
+        self.main = DenseNet(units=[512,256,128])
         self.out = Dense(output_size,activation='linear')
         
     def call(self,INPUT):
