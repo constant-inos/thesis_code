@@ -76,6 +76,7 @@ DEF Mitsos E-puck {
   translation -0.646334 -1.11022e-15 0.307607
   controller "ddqn_webots"
   supervisor TRUE
+  camera_fieldOfView 1.57
   emitter_channel 13
   receiver_channel 12
   groundSensorsSlot [
