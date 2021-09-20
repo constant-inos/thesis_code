@@ -16,6 +16,7 @@ import __main__
 import pathlib
 from datetime import datetime as dt
 import extras
+import cv2
 
 
 class VarLog:
@@ -32,6 +33,7 @@ class Logger:
             self.fname = self.get_fname()
         self.time = []
         self.t = -1
+        self.gameplay = []
 
     def get_fname(self):
         i = 0
@@ -88,6 +90,29 @@ class Logger:
         plt.plot(var.log)
         plt.show()        
         return
+
+
+    def arrays2video(self,frames):
+
+
+        size = frames[0].shape[0],frames[0].shape[1]
+        fps = 15
+
+        image = (frames[0]).astype(np.uint8)
+        size = image.shape[:-1]
+        frame_size = (size[1],size[0]) 
+
+        out = cv2.VideoWriter('output.avi',cv2.VideoWriter_fourcc(*'MPEG'), fps, frameSize= frame_size)
+         
+        for i in range(len(frames)):
+            image = frames[i][:,:,0]
+            # print(image.shape)
+            # image = np.rollaxis(image, 0, 3)
+            # print(image.shape)
+            # exit()
+            image = image.astype(np.uint8)
+            out.write(image)
+        out.release()
 
 if __name__ == '__main__':
     L = Logger(name='test')
