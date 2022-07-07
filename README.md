@@ -9,3 +9,9 @@
    
  - Implementation for Cartpole-v0, VizDoom, and custom Obstacle Avoidance Environment
    
+________________________________
+
+ - setupvizdoom.sh: install VizDoom and dependencies
+ - setupwebots2.sh: install Webots and depemdencies
+ 
+ 
